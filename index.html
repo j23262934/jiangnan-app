@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>江南知府 v16.7</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        /* --- 1. 核心變數 --- */
+        :root {
+            --bg-body: #F2F2F7;
+            --bg-card: #FFFFFF;
+            --bg-input: #E3E3E8;
+            --text-main: #1C1C1E;
+            --text-sub: #8E8E93;
+            --primary: #5dabff;
+            --primary-grad: linear-gradient(135deg, #a3bded 0%, #6991c7 100%);
+            --danger: #FF3B30;
+            --success: #c7c7c7;
+            --rank-tian: #fab75a;
+            --rank-hou: #5a9ffa;
+            --rank-qing: #8fe09d;
+            --rank-shi: #A0A0A5;
+            --radius-m: 12px;
+            --radius-l: 18px;
+            --radius-xl: 24px;
+            --shadow: 0 4px 20px rgba(0,0,0,0.06);
+            --bottom-nav-height: 80px;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+            background-color: var(--bg-body); margin: 0; color: var(--text-main); height: 100vh;
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        /* --- 提示與確認卡片 --- */
+        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 3000; pointer-events: none; }
+        .toast { background: rgba(28, 28, 30, 0.9); color: #fff; padding: 10px 20px; border-radius: 30px; font-size: 0.9rem; font-weight: 500; margin-bottom: 10px; backdrop-filter: blur(10px); animation: toastIn 0.3s ease-out forwards; }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+        #confirm-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 2000; opacity: 0; pointer-events: auto; transition: 0.3s; backdrop-filter: blur(2px); display: none; }
+        #confirm-overlay.open { display: block; opacity: 1; }
+        #confirm-card { position: fixed; top: 0; left: 50%; transform: translate(-50%, -150%); width: 90%; max-width: 400px; background: #fff; border-radius: 24px; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); z-index: 2100; transition: transform 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.1); }
+        #confirm-card.open { transform: translate(-50%, 20px); }
+        .confirm-title { font-weight: 800; margin-bottom: 8px; font-size: 1.2rem; text-align: center; }
+        .confirm-msg { color: var(--text-sub); font-size: 0.95rem; margin-bottom: 20px; text-align: center; line-height: 1.5; }
+
+        /* --- 頂部導航 --- */
+        header { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); z-index: 10; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.05); flex-shrink: 0; }
+        .app-title { text-align: center; font-size: 1.1rem; font-weight: 700; padding: 12px 0 8px 0; }
+        .city-scroll { display: flex; width: 100%; padding: 0 15px; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+        .city-scroll::-webkit-scrollbar { display: none; }
+        .city-tab { flex-shrink: 0; padding: 8px 18px; border-radius: 30px; color: var(--text-sub); font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        .city-tab.active { background: var(--text-main); color: #fff; }
+        .city-tab.special-tab { color: var(--primary); background: rgba(0, 122, 255, 0.08); }
+        .city-tab.special-tab.active { background: var(--primary-grad); color: #fff; }
+
+        /* 主要內容區佈局修復 */
+        main { flex: 1; overflow-y: auto; padding: 20px 20px 110px 20px; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; width: 100%; }
+        .subtitle { font-size: 1.5rem; font-weight: 800; }
+        .btn-action { background: var(--primary-grad); color: white; border: none; border-radius: 30px; padding: 8px 18px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: transform 0.1s; flex-shrink: 0; }
+        .btn-action:active { transform: scale(0.95); }
+
+        .search-container { margin-bottom: 20px; position: relative; }
+        .search-input-main { width: 100%; padding: 12px 16px 12px 42px; border: none; background: #FFFFFF; border-radius: 12px; font-size: 1rem; box-shadow: var(--shadow); }
+        .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-sub); }
+
+        .view-section { display: none; opacity: 0; animation: fadeIn 0.3s forwards; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        /* --- 卡片樣式 --- */
+        .card-base { background: var(--bg-card); border-radius: var(--radius-l); padding: 16px; box-shadow: var(--shadow); margin-bottom: 12px; transition: 0.2s; position: relative; overflow: hidden; cursor: pointer; }
+        .char-grid { display: grid; gap: 12px; }
+        .char-card { display: flex; flex-direction: column; gap: 12px; }
+        .card-header-row { display: flex; justify-content: space-between; align-items: center; }
+        .char-name { font-size: 1.1rem; font-weight: 700; }
+        .rank-tag { font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; color: #fff; }
+        .bg-天 { background: var(--rank-tian); } .bg-侯 { background: var(--rank-hou); } .bg-卿 { background: var(--rank-qing); } .bg-士 { background: var(--rank-shi); }
+        
+        .char-talent { font-size: 0.85rem; color: var(--text-sub); line-height: 1.5; background: #F9F9FB; padding: 12px; border-radius: var(--radius-m); }
+        .talent-hl { color: var(--primary); font-weight: 800; }
+
+        .stats-row { display: flex; justify-content: space-between; margin-top: 5px; }
+        .stat-box { display: flex; flex-direction: column; align-items: center; flex: 1; }
+        .stat-label { font-size: 0.7rem; color: #B0B0B5; }
+        .stat-val { font-size: 1.1rem; font-weight: 600; }
+        .stat-high { color: var(--primary); font-weight: 800; }
+        .stat-ultra { color: #FF9500; font-weight: 800; }
+
+        /* --- 建築樣式 --- */
+        .building-list { display: grid; gap: 12px; }
+        .building-card { display: flex; align-items: center; gap: 12px; padding-left: 24px; position: relative; }
+        .b-color-strip { position: absolute; left: 0; top: 0; bottom: 0; width: 8px; transition: background 0.3s; }
+        .b-info { flex: 1; min-width: 0; }
+        .b-name { font-weight: 700; display: block; font-size: 1rem; }
+        .b-desc { font-size: 0.85rem; color: var(--text-sub); }
+        .btn-distribute { color: #443c3c; background: #F2F2F7; border: none; border-radius: 20px; padding: 6px 12px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+
+        /* --- 彈窗內的並列佈局 --- */
+        .field-row { display: flex; gap: 12px; margin-bottom: 15px; align-items: flex-end; }
+        .edit-group { margin-bottom: 0; position: relative; }
+        
+        .color-picker-wrapper { flex: 0 0 50px; text-align: center; margin-bottom: 0; }
+        .circular-color-picker {
+            width: 45px; height: 45px; border-radius: 50%; overflow: hidden;
+            border: 3px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative; cursor: pointer; margin: 0 auto;
+        }
+        .circular-color-picker input[type="color"] {
+            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            cursor: pointer; border: none; padding: 0; opacity: 0;
+        }
+
+        /* 底部選單 */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--bottom-nav-height); background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); border-top: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-around; align-items: center; z-index: 50; padding-bottom: 15px; }
+        .nav-item { flex: 1; text-align: center; color: #C7C7CC; font-size: 0.75rem; cursor: pointer; }
+        .nav-item.active { color: var(--text-main); }
+        .nav-icon { display: block; width: 24px; height: 24px; margin: 0 auto 4px auto; fill: currentColor; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 100; backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 30px; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+        .modal-box { background: #fff; width: 95%; max-width: 500px; border-radius: var(--radius-xl); padding: 30px 24px; max-height: 85vh; overflow-y: auto; transform: translateY(100%); transition: 0.3s; position: relative; }
+        .modal-overlay.open .modal-box { transform: translateY(0); }
+        .modal-title { font-size: 1.25rem; font-weight: 800; margin-bottom: 20px; text-align: center; }
+        
+        .edit-group-v { margin-bottom: 20px; }
+        .edit-label { font-size: 0.85rem; color: var(--text-sub); font-weight: 600; margin-bottom: 8px; display: block; }
+        .text-input, .talent-input, .select-input { width: 100%; padding: 14px; border: none; background: var(--bg-input); border-radius: 12px; font-size: 1rem; color: var(--text-main); }
+        
+        .suggestion-container { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 1001; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #eee; }
+        .suggestion-item { padding: 14px 16px; border-bottom: 1px solid #f2f2f7; cursor: pointer; display: flex; justify-content: space-between; }
+        
+        .stat-inputs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        .stat-input-wrap input { width: 100%; text-align: center; padding: 12px 0; border: none; background: var(--bg-input); border-radius: 12px; font-weight: 700; }
+        
+        .city-dispatch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .dispatch-btn { padding: 12px; border: none; background: var(--bg-input); border-radius: 12px; font-weight: 600; cursor: pointer; border: 2px solid transparent; }
+        .dispatch-btn.selected { background: #EAF2FF; color: var(--primary); border-color: var(--primary); }
+
+        .action-btns { margin-top: 25px; display: flex; gap: 12px; }
+        .btn { flex: 1; padding: 14px; border: none; border-radius: 16px; font-weight: 700; cursor: pointer; }
+        .btn-cancel { background: #F2F2F7; color: var(--text-sub); }
+        .btn-save-full { background: var(--primary-grad); color: white; }
+        .btn-delete { background: #FFF0F0; color: var(--danger); width: 100%; margin-top: 15px; }
+
+        .overview-divider { margin: 30px 0 15px 0; font-size: 0.8rem; font-weight: 600; color: #C7C7CC; display: flex; align-items: center; gap: 10px; }
+        .overview-divider::after { content: ""; flex: 1; height: 1px; background: #E5E5EA; }
+    </style>
+</head>
+<body>
+
+    <div id="toast-container"></div>
+    <div id="confirm-overlay" onclick="handleConfirm(false)"></div>
+    <div id="confirm-card">
+        <div class="confirm-title" id="confirm-title">確認</div>
+        <div class="confirm-msg" id="confirm-msg"></div>
+        <div style="display:flex; gap:12px;">
+            <button class="btn btn-cancel" onclick="handleConfirm(false)">取消</button>
+            <button class="btn btn-save-full" style="background:var(--danger);" id="confirm-ok-btn" onclick="handleConfirm(true)">確定</button>
+        </div>
+    </div>
+
+    <header>
+        <div class="app-title">江南知府 v16.7</div>
+        <nav class="city-scroll" id="cityTabs"></nav>
+    </header>
+
+    <main>
+        <!-- View 1: 人物 -->
+        <div id="view-people" class="view-section active">
+            <div class="section-header">
+                <div class="subtitle">人員</div>
+                <button class="btn-action" onclick="openAddCharModal()">＋ 新增</button>
+            </div>
+            <div class="search-container">
+                <span class="material-symbols-outlined search-icon">search</span>
+                <input type="text" id="searchInput" class="search-input-main" placeholder="搜尋姓名..." oninput="renderPeople()">
+            </div>
+            <div id="charList" class="char-grid"></div>
+        </div>
+
+        <!-- View 2: 建築 -->
+        <div id="view-city" class="view-section">
+            <div class="section-header">
+                <div class="subtitle" id="build-subtitle">建築倉庫</div>
+                <button id="addBuildBtn" class="btn-action" onclick="openAddBuildingModal()">＋ 新增原型</button>
+            </div>
+            <div id="buildingList" class="building-list"></div>
+        </div>
+
+        <!-- View 3: 概況 -->
+        <div id="view-overview" class="view-section">
+            <div class="section-header"><div class="subtitle">州府總覽</div></div>
+            <div id="overview-content"></div>
+            <button class="btn btn-save-full" style="background:var(--success); color:#fff; width:100%; margin-top:40px; border-radius:16px;" onclick="openDataModal()">💾 數據備份 / 還原</button>
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('people')"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><div>人物</div></div>
+        <div class="nav-item" onclick="switchTab('city')"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v7H7zm4 0h2v7h-2zm4 0h2v7h-2z"/></svg><div>建築</div></div>
+        <div class="nav-item" onclick="switchTab('overview')"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg><div>概況</div></div>
+    </nav>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="charModal">
+        <div class="modal-box">
+            <div class="modal-title" id="charModalTitle">編輯人物</div>
+            <div class="field-row">
+                <div class="edit-group" style="flex:1;">
+                    <label class="edit-label">姓名</label>
+                    <input type="text" id="in-c-name" class="text-input" oninput="handleNameInput()" autocomplete="off">
+                    <div id="suggestionBox" class="suggestion-container"></div>
+                </div>
+                <div class="edit-group" style="flex:0 0 100px;">
+                    <label class="edit-label">階級</label>
+                    <select id="in-c-rank" class="select-input">
+                        <option value="天">天</option><option value="侯">侯</option><option value="卿">卿</option><option value="士">士</option>
+                    </select>
+                </div>
+            </div>
+            <div class="edit-group-v">
+                <label class="edit-label">五維屬性</label>
+                <div class="stat-inputs">
+                    <div class="stat-input-wrap"><input type="number" id="in-c-build"></div>
+                    <div class="stat-input-wrap"><input type="number" id="in-c-farm"></div>
+                    <div class="stat-input-wrap"><input type="number" id="in-c-make"></div>
+                    <div class="stat-input-wrap"><input type="number" id="in-c-money"></div>
+                    <div class="stat-input-wrap"><input type="number" id="in-c-adv"></div>
+                </div>
+            </div>
+            <div class="edit-group-v">
+                <label class="edit-label">能力 [ ] 高亮</label>
+                <textarea id="in-c-talent" class="talent-input" rows="2"></textarea>
+            </div>
+            <div class="edit-group-v">
+                <label class="edit-label">所在地</label>
+                <div class="city-dispatch-grid" id="modalCityGrid"></div>
+            </div>
+            <div class="action-btns">
+                <button class="btn btn-cancel" onclick="closeModal('charModal')">取消</button>
+                <button class="btn btn-save-full" onclick="saveChar()">儲存</button>
+            </div>
+            <button id="btn-delete-char" class="btn btn-delete" onclick="askDeleteChar()">刪除此人</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="buildingModal">
+        <div class="modal-box">
+            <div class="modal-title" id="buildModalTitle">原型設定</div>
+            <div class="field-row">
+                <div class="edit-group" style="flex:1;">
+                    <label class="edit-label">名稱</label>
+                    <input type="text" id="in-b-name" class="text-input">
+                </div>
+                <div class="color-picker-wrapper">
+                    <label class="edit-label">顏色</label>
+                    <div class="circular-color-picker" id="color-circle">
+                        <input type="color" id="in-b-color" oninput="document.getElementById('color-circle').style.background=this.value">
+                    </div>
+                </div>
+            </div>
+            <div class="edit-group-v">
+                <label class="edit-label">備註</label>
+                <input type="text" id="in-b-desc" class="text-input">
+            </div>
+            <div class="action-btns">
+                <button class="btn btn-cancel" onclick="closeModal('buildingModal')">取消</button>
+                <button class="btn btn-save-full" onclick="saveMasterBuilding()">儲存</button>
+            </div>
+            <button id="btn-delete-build" class="btn btn-delete" onclick="askDeleteBuild()">連鎖刪除</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="distributeModal"><div class="modal-box"><div class="modal-title">分配至州府</div><div class="city-dispatch-grid" id="distCityGrid"></div><div class="action-btns"><button class="btn btn-cancel" onclick="closeModal('distributeModal')">取消</button><button class="btn btn-save-full" onclick="confirmDistribution()">確認分配</button></div></div></div>
+
+    <div class="modal-overlay" id="dataModal"><div class="modal-box"><div class="modal-title">數據操作</div><textarea id="data-area" class="text-input" style="height:200px; font-size:0.8rem; font-family:monospace;"></textarea><div class="action-btns"><button class="btn btn-cancel" onclick="copyData()">複製</button><button class="btn btn-save-full" onclick="importData()">導入</button></div></div></div>
+
+    <script>
+        // --- 完整的人物資料庫 ---
+        const charDB = {
+            "沈周": { rank: "天", talent: "在[商業建築]工作時，立即完成[20%]進度，且[無需]工人。", stats: { build: 241, farm: 433, make: 608, money: 778, adv: 612 }, }, 
+            "王如一": { rank: "侯", talent: "負責[滅火]工作時，立即完成[5%]進度。", stats: { build: 271, farm: 65, make: 301, money: 420, adv: 388 }, },
+            "魏徵": { rank: "侯", talent: "外出[探險]時，採集礦物體力消耗[-10]。驅逐鬼怪時，立即完成[5%]進度。", stats: { build: 269, farm: 403, make: 183, money: 183, adv: 418 }, },
+            "榮嘉": { rank: "侯", talent: "在[商業建築]中負責2小時以上工作，額外獲得[1顆]名貴珍珠。", stats: { build: 224, farm: 404, make: 160, money: 387, adv: 54 }, },
+            "利瑪竇": { rank: "侯", talent: "在[書局]工作時，立即完成[5%]進度。", stats: { build: 73, farm: 181, make: 267, money: 416, adv: 267 }, },
+            "劉玉瑾": { rank: "侯", talent: "在[玉器工坊]工作時，所需玉石減少[10%]，並立即完成[5%]進度。", stats: { build: 65, farm: 245, make: 607, money: 239, adv: 417 }, },
+            "陸深": { rank: "侯", talent: "在[改良農田]工作時，產量提升[20%]。", stats: { build: 245, farm: 602, make: 604, money: 429, adv: 239 }, },
+            "杜言遊": { rank: "侯", talent: "[探索新區域]時，立即完成[10%]進度，且所需工人[-1]。", stats: { build: 64, farm: 416, make: 86, money: 238, adv: 606 }, },
+            "東方祚": { rank: "天", talent: "外出[探險]時，採集礦石體力消耗[-50%]，並額外獲得1個隨機礦物。", stats: { build: 247, farm: 256, make: 608, money: 88, adv: 791 }, },
+            "郭天問": { rank: "侯", talent: "負責[星宿關卡任意工作]時，立即完成[8%]進度。", stats: { build: 454, farm: 425, make: 69, money: 56, adv: 174 }, },
+            "金聖嘆": { rank: "侯", talent: "在[晚上]工作時，建造屬性變為[1.2倍]。", stats: { build: 575, farm: 337, make: 57, money: 57, adv: 204 }, },
+            "花宜芳": { rank: "侯", talent: "在裁縫鋪、子衿衣閣工作時，額外獲得[5%]資源或產品，且所需工人[-1]。", stats: { build: 238, farm: 428, make: 603, money: 416, adv: 86 }, },
+            "燕阿紫": { rank: "侯", talent: "入住城鎮後，會在[空閒]且[投食槽]半滿時主動清理，且該城市小動物出走概率減少[30%]。", stats: { build: 75, farm: 492, make: 416, money: 58, adv: 416 }, },
+            "宋沉吟": { rank: "侯", talent: "在[商業建築]負責2小時以上理財工作時，額外獲得[8份]酒曲。", stats: { build: 235, farm: 364, make: 342, money: 492, adv: 82 }, },
+            "穆桂英": { rank: "侯", talent: "負責[製作]工作時，所需菜餚減少[10%]。", stats: { build: 364, farm: 235, make: 660, money: 219, adv: 342 }, },
+            "小蠻": { rank: "卿", talent: "在[竹林]工作時，產量提升[30%]。", stats: { build: 445, farm: 621, make: 261, money: 98, adv: 91 }, },
+            "文漢儒": { rank: "卿", talent: "在[商業建築]工作時，立即完成[10%]進度。", stats: { build: 242, farm: 63, make: 212, money: 431, adv: 63 }, },
+            "徐妙雲": { rank: "天", talent: "負責[任意工作]時，立即完成[5%]進度，且與朱棣入住同城市時，雙方負責工作時的屬性變為[1.1倍]。", stats: { build: 607, farm: 777, make: 432, money: 611, adv: 255 }, },
+            "戚繼光": { rank: "天", talent: "負責[倉城佈防]任意工作時，立即完成[10%]進度，且[無需]額外工人。", stats: { build: 614, farm: 610, make: 424, money: 435, adv: 780 }, },
+            "李商隱": { rank: "天", talent: "負責2小時以上[理財]工作時，立即完成20%進度，並隨機獲得[30份]資源。", stats: { build: 88, farm: 612, make: 438, money: 778, adv: 422 }, },
+            "百里安": { rank: "天", talent: "在[商業建築]中負責2小時以上工作時，額外獲得[20份]瓷器、玉器或越瓷。", stats: { build: 246, farm: 437, make: 777, money: 790, adv: 240 }, },
+            "百里沉香": { rank: "天", talent: "在[香粉廠]工作時，所需花瓣減少[20%]，且所需工人[-1]。", stats: { build: 66, farm: 778, make: 794, money: 241, adv: 88 }, },
+            "馬蓬瀛": { rank: "天", talent: "負責[農牧]工作時，立即完成[20%]進度，且所需工人[-1]。", stats: { build: 433, farm: 794, make: 241, money: 247, adv: 95 }, },
+            "柳永": { rank: "天", talent: "[建造娛樂建築]時，所需資源消耗減少[10%]，且所需工人[-1]。", stats: { build: 794, farm: 88, make: 438, money: 247, adv: 608 }, },
+            "馬遠道": { rank: "天", talent: "在[碼頭]負責船運時，立即完成[15%]進度，且運輸建築所需菜餚減少[30%]。", stats: { build: 422, farm: 612, make: 247, money: 608, adv: 794 }, },
+            "杜秋娘": { rank: "卿", talent: "負責1小時以上[製作]工作時，額外獲得[30份]菜餚。", stats: { build: 231, farm: 231, make: 431, money: 63, adv: 63 }, },
+            "劉淑貞": { rank: "侯", talent: "在[茶園]工作時，額外獲得[20%]資源。", stats: { build: 358, farm: 515, make: 227, money: 532, adv: 227 }, },
+            "柳春鶯": { rank: "侯", talent: "外出[探險]時，採集[植物]體力消耗減少[20%]。", stats: { build: 83, farm: 226, make: 377, money: 423, adv: 514 }, },
+            "顧半城": { rank: "侯", talent: "在[商行]負責[補貨]工作時，消耗貨物減少[6]，並立即完成[10%]進度。", stats: { build: 421, farm: 87, make: 432, money: 607, adv: 240 }, },
+            "曹亦": { rank: "侯", talent: "在揚州漕運負責[轉運]工作時，銅錢收入增加[10%]，並額外獲得[1]張連票。", stats: { build: 254, farm: 87, make: 65, money: 429, adv: 604 }, },
+            "元採藍": { rank: "侯", talent: "負責2小時以上[製作]工作時，額外獲得[2份]染料，且所需工人[-1]。", stats: { build: 425, farm: 84, make: 535, money: 214, adv: 83 }, },
+            "竇有禪": { rank: "侯", talent: "在[黏土礦、草藥田、茶園]工作時，額外獲得[10份]蔬菜，且所需工人[-1]。", stats: { build: 65, farm: 602, make: 435, money: 239, adv: 417 }, },
+            "顧小九": { rank: "天", talent: "負責2小時以上[製作]工作時，額外獲得[2個]宅邸傢俱材料，且所需工人[-2]。", stats: { build: 608, farm: 256, make: 794, money: 438, adv: 612 }, },
+            "鍾馗": { rank: "侯", talent: "[晚上]工作時，[製作屬性]變為[1.2倍]。驅逐鬼怪時，立即完成[5%]進度。", stats: { build: 431, farm: 604, make: 606, money: 241, adv: 419 }, },
+            "小青": { rank: "侯", talent: "在[商業建築]工作時，所需工人[+1]，但銅錢收入提升[10%]。", stats: { build: 242, farm: 65, make: 431, money: 598, adv: 405 }, },
+            "蘭心嫻": { rank: "侯", talent: "在[琥珀酒坊]工作時，酒類貨物產量增加[40%]，且所需工人[-1]。", stats: { build: 257, farm: 434, make: 795, money: 792, adv: 439 }, },
+            "白玉堂": { rank: "侯", talent: "在[商業建築]負責1小時以上工作時，額外獲得[50份]菜餚。", stats: { build: 415, farm: 243, make: 427, money: 605, adv: 602 }, },
+            "盧璀": { rank: "天", talent: "負責1小時以上[農牧]工作時，立即完成[10%]進度，並隨機獲得[20份]資源。", stats: { build: 609, farm: 795, make: 439, money: 257, adv: 242 }, },
+            "湯大年": { rank: "侯", talent: "在[藥鋪]工作時，銅錢收入提升[100%]，且所需工人[-1]。", stats: { build: 94, farm: 435, make: 65, money: 607, adv: 245 }, },
+            "陶姜": { rank: "侯", talent: "在[香粉廠]工作時，額外獲得[10%]資源。", stats: { build: 89, farm: 244, make: 440, money: 259, adv: 7 }, },
+            "秦子棠": { rank: "侯", talent: "在[商業建築]負責1小時以上工作時，需要的本金減少[50%]，且銅錢收入增加[15%]。", stats: { build: 244, farm: 67, make: 89, money: 431, adv: 96 }, },
+            "大和撫子": { rank: "侯", talent: "在[魚塘、蟹塘]工作時，額外獲得[30份]肉類。", stats: { build: 247, farm: 618, make: 93, money: 241, adv: 428 }, },
+            "祝枝山": { rank: "侯", talent: "負責[任意生產工作]時，物品掉落率提升[30%]。", stats: { build: 245, farm: 604, make: 785, money: 254, adv: 417 }, },
+            "滿庭芳": { rank: "侯", talent: "在[商業建築]工作時，銅錢收入提升[40%]，但所需工人[+1]。", stats: { build: 64, farm: 434, make: 238, money: 601, adv: 86 }, },
+            "朱元璋": { rank: "侯", talent: "負責[農牧]工作時，立即完成[5%]進度。", stats: { build: 606, farm: 784, make: 238, money: 93, adv: 244 }, },
+            "周遊越": { rank: "侯", talent: "負責1小時以上[理財]工作時，立即完成[8%]進度，且有[3%]機率額外獲得1個珍貴螃蜞。", stats: { build: 66, farm: 240, make: 436, money: 608, adv: 18 }, },
+            "左思": { rank: "侯", talent: "在[造紙廠]工作時，產量提升[10%]，且所需工人[-1]。", stats: { build: 434, farm: 238, make: 772, money: 244, adv: 244 }, },
+            "鄭和": { rank: "侯", talent: "在碼頭負責船運工作時，立即完成[5%]進度，探險體力恢復速度加快[15%]。", stats: { build: 604, farm: 241, make: 241, money: 247, adv: 604 }, },
+            "樂聞": { rank: "侯", talent: "負責[農牧]工作時，隨機獲得[5份]資源，但所需工人[+1]。", stats: { build: 86, farm: 606, make: 416, money: 64, adv: 253 }, },
+            "姚廣孝": { rank: "侯", talent: "負責2小時以上[製作]工作時，立即完成[10%]進度。", stats: { build: 605, farm: 240, make: 605, money: 418, adv: 95 }, },
+            "徐霞客": { rank: "侯", talent: "[探索新區域時]，立即完成[20%]進度。", stats: { build: 242, farm: 84, make: 604, money: 236, adv: 770 }, },
+            "許宣": { rank: "侯", talent: "在[藥鋪]工作時，額外獲得10份草藥。", stats: { build: 247, farm: 419, make: 609, money: 775, adv: 437 }, },
+            "徐光啟": { rank: "侯", talent: "在[農田、改良農田、油菜花田]工作時，額外獲得[10份]蔬菜。", stats: { build: 239, farm: 604, make: 417, money: 245, adv: 254 }, },
+            "謝道韞": { rank: "侯", talent: "負責1小時以上[製作]工作時，所需資源消耗減少[5%]。", stats: { build: 428, farm: 253, make: 603, money: 64, adv: 244 }, },
+            "文徵明": { rank: "侯", talent: "[建造新建築]時，立即完成[36%]進度。", stats: { build: 796, farm: 244, make: 253, money: 84, adv: 612 }, },
+            "吳黎": { rank: "侯", talent: "[升級建築]時，立即完成[20%]進度。", stats: { build: 601, farm: 253, make: 603, money: 93, adv: 86 }, },
+            "蘇武": { rank: "侯", talent: "負責[農牧]工作時，額外獲得[20份]肉類。", stats: { build: 239, farm: 607, make: 245, money: 94, adv: 607 }, },
+            "佘太君": { rank: "侯", talent: "在[商業建築]工作時，每有一位女性工人，則銅錢收入增加[5%]。", stats: { build: 253, farm: 434, make: 428, money: 603, adv: 64 }, },
+            "阮籍": { rank: "侯", talent: "負責[農牧]工作時，物品掉落率提升[20%]。", stats: { build: 89, farm: 604, make: 437, money: 606, adv: 247 }, },
+            "千暮雪": { rank: "侯", talent: "負責2小時以上[製作]工作時，每有一位女性工人，可額外獲得[1]個兵器。", stats: { build: 64, farm: 253, make: 603, money: 428, adv: 416 }, },
+            "邱仲": { rank: "侯", talent: "負責[建造或升級]建築時，立即完成[20%]進度，但所需菜餚花費增加[5%]。", stats: { build: 604, farm: 239, make: 65, money: 94, adv: 429 }, },
+            "裴聞鏡": { rank: "侯", talent: "負責1小時以上[製作]工作時，立即完成[5%]進度，並額外獲得[20%]資源。", stats: { build: 253, farm: 64, make: 603, money: 416, adv: 428 }, },
+            "潘安": { rank: "侯", talent: "建造[新建築]時，獲得[50份]蔬菜。", stats: { build: 602, farm: 417, make: 239, money: 245, adv: 607 }, },
+            "王禎": { rank: "天", talent: "負責[農牧]工作時，每有一個工人，額外獲得10%資源。", stats: { build: 434, farm: 779, make: 609, money: 257, adv: 89 }, }, 
+            "吳承恩": { rank: "天", talent: "負責2小時以上[製作]工作時，隨機獲得[50]份資源，且所需工人[-1]。", stats: { build: 65, farm: 437, make: 793, money: 65, adv: 790 }, }, 
+            "萬千山": { rank: "天", talent: "負責[建造]工作時，每有一個男性工人，立即完成[2%]進度。", stats: { build: 791, farm: 256, make: 438, money: 256, adv: 608 }, }, 
+            "李青溪": { rank: "侯", talent: "在[竹林]工作時，額外獲得[30%]資源，並立即完成[8%]進度。", stats: { build: 246, farm: 603, make: 88, money: 430, adv: 95 }, }, 
+            "李旋簫": { rank: "侯", talent: "在[商業建築]工作時，立即完成[5%]進度，且所需工人[-1]。", stats: { build: 65, farm: 65, make: 245, money: 604, adv: 435 }, }, 
+            "王昭君": { rank: "天", talent: "外出[探險]時，只消耗[0.6份]糧草。", stats: { build: 97, farm: 243, make: 793, money: 243, adv: 793 }, }, 
+            "藍玉": { rank: "侯", talent: "除了驛站探險外，在[晚上]工作時，探險屬性變為[1.2倍]。", stats: { build: 434, farm: 253, make: 64, money: 64, adv: 601 }, }, 
+            "羅一響": { rank: "侯", talent: "在[商業建築]工作時，銅錢收入提升[60%]，且所需工人[-1]。", stats: { build: 435, farm: 65, make: 87, money: 607, adv: 254 }, }, 
+            "姜壽": { rank: "侯", talent: "在[壽材店]工作時，銅錢收入提升[50%]，並隨機獲得[5]份資源。", stats: { build: 434, farm: 93, make: 238, money: 601, adv: 238 }, }, 
+            "金鯉": { rank: "侯", talent: "負責1小時以上的[理財]工作時，銅錢收入提升[30%]，且有[50%]機率額外獲得1個上上籤。", stats: { build: 93, farm: 416, make: 416, money: 601, adv: 86 }, }, 
+            "雲晴雪": { rank: "侯", talent: "[建造或升級]1小時以上建築時，立即完成[8%]進度，且所需工人[-1]。", stats: { build: 602, farm: 254, make: 87, money: 429, adv: 417 }, }, 
+            "杜言行": { rank: "侯", talent: "負責1小時以上[農牧]工作時，立即完成[6%]進度，且物品掉落率提升[30%]。", stats: { build: 65, farm: 602, make: 87, money: 417, adv: 245 }, }, 
+            "沈周": { rank: "天", talent: "負責[任意工作]時，立即完成[5%]進度，且所需工人[-1]。", stats: { build: 424, farm: 610, make: 793, money: 610, adv: 97 }, }, 
+            "向斜陽": { rank: "天", talent: "負責1小時以上[製作]時，有[8%]機率立即完成，且所需工人[-1]。", stats: { build: 247, farm: 608, make: 778, money: 433, adv: 66 }, }, 
+            "玄奘": { rank: "天", talent: "負責[任意工作]時，菜餚需求[-30%]，驅逐鬼怪時，立即完成[15%]進度。", stats: { build: 614, farm: 780, make: 424, money: 243, adv: 796 }, }, 
+            "徐禎卿": { rank: "天", talent: "在[商業建築]中負責3小時以上工作時，立即完成[30%]進度，且所需工人[-2]。", stats: { build: 780, farm: 440, make: 243, money: 793, adv: 97 }, }, 
+            "楊嫿": { rank: "天", talent: "負責2小時以上[農牧]工作時，立即完成[10%]進度，並額外獲得[100%]資源。", stats: { build: 247, farm: 778, make: 433, money: 612, adv: 608 }, }, 
+            "董其昌": { rank: "侯", talent: "負責[製作]工作時，額外獲得[90%]資源。", stats: { build: 242, farm: 96, make: 792, money: 609, adv: 439 }, }, 
+            "張山歸": { rank: "天", talent: "探索[新區域]時，立即完成[15%]進度，且除銅錢外的其他資源及道具消耗減少[10%]。", stats: { build: 434, farm: 613, make: 609, money: 248, adv: 779 }, }, 
+            "奢香": { rank: "天", talent: "[建造新商業建築]時，隨機獲得[30]份資源，且所需工人[-1]。", stats: { build: 790, farm: 777, make: 246, money: 94, adv: 607 }, }, 
+            "蘇軾": { rank: "天", talent: "負責[製作]工作時，肉類需求[-50%]，且所需工人[-2]。", stats: { build: 249, farm: 67, make: 783, money: 797, adv: 612 }, }, 
+            "沈括": { rank: "天", talent: "負責[農牧]工作時，額外獲得[100%]資源，但所需工人[+1]。", stats: { build: 431, farm: 792, make: 776, money: 93, adv: 93 }, }, 
+            "上官婉兒": { rank: "天", talent: "在[書局]或[印刷廠]工作時，立即完成[15%]進度，並額外獲得[40%]資源或道具。", stats: { build: 437, farm: 240, make: 607, money: 777, adv: 421 }, }, 
+            "沈度": { rank: "天", talent: "負責[製作]工作時，有[5%]機率立即完成、且所需工人[-2]。", stats: { build: 243, farm: 68, make: 796, money: 780, adv: 90 }, }, 
+            "仇英": { rank: "天", talent: "負責[製作]、[農牧]工作時，如工人總數為雙數，則額外獲得[150%]資源。", stats: { build: 437, farm: 87, make: 793, money: 607, adv: 421 }, }, 
+            "喬溪午": { rank: "天", talent: "在用沙堡的抵禦怪物中負責任意工作時，立即完成[25%]進度。", stats: { build: 607, farm: 255, make: 607, money: 432, adv: 793 }, }, 
+            "屈原": { rank: "天", talent: "負責1小時以上[農牧]工作時，額外獲得[80份]菜餚，且所需工人[-1]。", stats: { build: 610, farm: 780, make: 614, money: 90, adv: 435 }, }, 
+            "孟餘": { rank: "天", talent: "負責[製作]工作時，不消耗菜餚，反而獲得[100%]菜餚，且所需工人[-2]。", stats: { build: 96, farm: 434, make: 779, money: 613, adv: 257 }, }, 
+            "麥小滿": { rank: "天", talent: "負責揚州[漕運]任意工作時，立即完成[10%]進度，且所需工人[-1]。", stats: { build: 257, farm: 439, make: 257, money: 609, adv: 779 }, }, 
+            "孟好學": { rank: "天", talent: "[建造或升級建築]時，除菜餚外其他所有資源花費減少[10%]，且所需工人[-1]。", stats: { build: 795, farm: 67, make: 792, money: 248, adv: 67 }, }, 
+            "柳笑翁": { rank: "天", talent: "在[商業建築]工作時，有[5%]機率立即完成，且所需本金減少[30%]。", stats: { build: 257, farm: 609, make: 439, money: 779, adv: 613 }, }, 
+            "羅素月": { rank: "天", talent: "在[煉丹爐]工作時，所需草藥減少[30%]、所需工人[-1]。", stats: { build: 423, farm: 609, make: 792, money: 439, adv: 434 }, }, 
+            "李清照": { rank: "天", talent: "在[商業建築]中工作時，銅錢收入提升[50%]、所需工人[-1]。", stats: { build: 440, farm: 610, make: 424, money: 796, adv: 243 }, }, 
+            "李煜": { rank: "天", talent: "在城市中負責1小時以上[製作]工作時，額外獲得[80%]資源、隨機獲得[3本]書籍。", stats: { build: 608, farm: 66, make: 794, money: 256, adv: 612 }, },
+            "劉採春": { rank: "天", talent: "負責2小時以上的[農牧]工作時，一起工作的同伴每有一位女性，額外獲得[40份]菜餚。", stats: { build: 434, farm: 779, make: 248, money: 96, adv: 609 }, }, 
+            "李白": { rank: "天", talent: "外出[探險]時，採集所有物體的體力消耗[-8]。", stats: { build: 607, farm: 607, make: 607, money: 432, adv: 790 }, }, 
+            "姜喜": { rank: "天", talent: "負責[製作]、[農牧]工作時，如工人總數為雙數，則額外獲得[150%]資源。", stats: { build: 257, farm: 609, make: 795, money: 423, adv: 248 }, }, 
+            "江行": { rank: "天", talent: "在城市中負責1小時以上的[建造]工作，隨機獲得[40份]資源，且所需工人[-1]。", stats: { build: 792, farm: 609, make: 257, money: 96, adv: 434 }, }, 
+            "紅拂": { rank: "天", talent: "[探索新區域]時，立即完成[15%]進度，且有[10%]機率無需銅錢。", stats: { build: 607, farm: 246, make: 246, money: 421, adv: 793 }, }, 
+            "公孫策": { rank: "天", talent: "在城市中負責[製作]工作時，每有1個工人，額外獲得[50份]菜餚。", stats: { build: 438, farm: 247, make: 778, money: 256, adv: 608 }, }, 
+            "公孫躍": { rank: "天", talent: "[探索新區域]時，需要本金減少[10%]，且所需工人[-2]。", stats: { build: 95, farm: 241, make: 612, money: 256, adv: 778 }, }, 
+            "天機子": { rank: "天", talent: "在[生產]或[商業建築]中負責1小時以上工作，隨機獲得[15份]資源，且所需工人[-2]。", stats: { build: 439, farm: 795, make: 613, money: 609, adv: 67 }, }, 
+            "道濟": { rank: "天", talent: "負責[製作]工作時，額外獲得[170%]資源；但做任意工作時，都有[15%]機率不想去工作。", stats: { build: 247, farm: 438, make: 791, money: 88, adv: 608 }, }, 
+            "成鳳羽": { rank: "天", talent: "[建造娛樂建築]時，所需資源消耗減少[10%]，並立即完成[10%]進度。", stats: { build: 794, farm: 438, make: 778, money: 256, adv: 422 }, }, 
+            "程大位": { rank: "天", talent: "負責[徽商]經營時，立即完成[10%]進度，並額外獲得[300]家族資金。", stats: { build: 247, farm: 256, make: 433, money: 794, adv: 791 }, }, 
+            "包拯": { rank: "天", talent: "負責[建造]時，花費的所有資源減少[10%]，但建造時間增加[10%]。且所需工人[-1]。", stats: { build: 789, farm: 606, make: 610, money: 436, adv: 420 }, }, 
+        };
+
+        const cities = ["special_root", "應天", "蘇州", "杭州", "松江", "徽州", "紹興", "揚州", "雞鳴"];
+        let characters = [], masterBuildings = [], cityBuildings = {};
+        let currentCity = "special_root", currentTab = "people", editingCharId = null;
+        let selectedHighlights = [], tempDispatchCity = "未分配", editingBuildIdx = null, distTargetIdx = null, selectedDistCities = [];
+        let confirmCallback = null;
+
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast'; toast.textContent = msg;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+        }
+
+        function showConfirmCard(title, msg, callback) {
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-msg').textContent = msg;
+            document.getElementById('confirm-overlay').classList.add('open');
+            document.getElementById('confirm-card').classList.add('open');
+            confirmCallback = callback;
+        }
+
+        function handleConfirm(result) {
+            document.getElementById('confirm-overlay').classList.remove('open');
+            document.getElementById('confirm-card').classList.remove('open');
+            if(result && confirmCallback) confirmCallback();
+            confirmCallback = null;
+        }
+
+        function init() { loadData(); renderCityTabs(); renderMainContent(); setupOverlayClick(); window.addEventListener('click', (e) => { const box = document.getElementById('suggestionBox'); if (e.target.id !== 'in-c-name' && e.target.id !== 'suggestionBox') box.style.display = 'none'; }); }
+
+        function loadData() {
+            characters = JSON.parse(localStorage.getItem('jiangnan_chars_v16') || '[]');
+            masterBuildings = JSON.parse(localStorage.getItem('jiangnan_master_v16') || '[]');
+            cityBuildings = JSON.parse(localStorage.getItem('jiangnan_cityb_v16') || '{}');
+            cities.forEach(c => { if(c !== "special_root" && !cityBuildings[c]) cityBuildings[c] = []; });
+        }
+
+        function saveData() {
+            localStorage.setItem('jiangnan_chars_v16', JSON.stringify(characters));
+            localStorage.setItem('jiangnan_master_v16', JSON.stringify(masterBuildings));
+            localStorage.setItem('jiangnan_cityb_v16', JSON.stringify(cityBuildings));
+        }
+
+        function setupOverlayClick() { document.querySelectorAll('.modal-overlay').forEach(overlay => { overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(overlay.id); }); }); }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            const idx = { 'people': 0, 'city': 1, 'overview': 2 }[tab];
+            document.querySelectorAll('.nav-item')[idx].classList.add('active');
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(`view-${tab}`).classList.add('active');
+            if(tab === 'overview' && currentCity === 'special_root') currentCity = "應天";
+            if(tab === 'city') currentCity = "special_root";
+            renderCityTabs(); renderMainContent();
+        }
+
+        function renderCityTabs() {
+            const container = document.getElementById('cityTabs'); container.innerHTML = '';
+            const list = (currentTab === 'overview') ? cities.slice(1) : cities;
+            list.forEach(city => {
+                const btn = document.createElement('div');
+                let name = (city === "special_root") ? (currentTab==='people'?'全部':currentTab==='city'?'倉庫':'未分類') : city;
+                btn.className = `city-tab ${city === "special_root" ? 'special-tab' : ''} ${city === currentCity ? 'active' : ''}`;
+                btn.textContent = name;
+                btn.onclick = () => { currentCity = city; renderCityTabs(); renderMainContent(); };
+                container.appendChild(btn);
+            });
+        }
+
+        function renderMainContent() { if(currentTab === 'people') renderPeople(); else if(currentTab === 'city') renderCityInfo(); else renderOverview(); }
+
+        function parseTalent(text) { return text ? text.replace(/\[(.*?)\]/g, '<span class="talent-hl">$1</span>') : "目前無特殊能力設定"; }
+
+        function renderPeople() {
+            const search = document.getElementById('searchInput').value.trim();
+            const container = document.getElementById('charList'); container.innerHTML = '';
+            let filtered = search ? characters.filter(c => c.name.includes(search)) : characters.filter(c => (currentCity === "special_root" ? true : c.city === currentCity));
+            filtered.forEach(char => {
+                const card = document.createElement('div'); card.className = 'card-base char-card'; card.onclick = () => openEditCharModal(char.id);
+                const s = char.stats; const isH = (k) => s[k]>=700?'stat-ultra':(s[k]>=600||(char.highlight&&char.highlight.includes(k)))?'stat-high':'';
+                card.innerHTML = `<div class="card-header-row"><span class="char-name">${char.name}</span><div class="header-tags"><span class="rank-tag bg-${char.rank}">${char.rank}</span></div></div><div class="char-talent">${parseTalent(char.talent)}</div><div class="stats-row"><div class="stat-box"><span class="stat-label">建</span><span class="stat-val ${isH('build')}">${s.build}</span></div><div class="stat-box"><span class="stat-label">農</span><span class="stat-val ${isH('farm')}">${s.farm}</span></div><div class="stat-box"><span class="stat-label">製</span><span class="stat-val ${isH('make')}">${s.make}</span></div><div class="stat-box"><span class="stat-label">理</span><span class="stat-val ${isH('money')}">${s.money}</span></div><div class="stat-box"><span class="stat-label">探</span><span class="stat-val ${isH('adv')}">${s.adv}</span></div></div>`;
+                container.appendChild(card);
+            });
+        }
+
+        function handleNameInput() {
+            const val = document.getElementById('in-c-name').value.trim();
+            const box = document.getElementById('suggestionBox'); box.innerHTML = '';
+            if(!val) { box.style.display = 'none'; return; }
+            const matches = Object.keys(charDB).filter(n => n.includes(val));
+            matches.forEach(m => {
+                const item = document.createElement('div'); item.className = 'suggestion-item';
+                item.innerHTML = `<span>${m}</span><span style="font-size:0.75rem; color:#8e8e93;">${charDB[m].rank}</span>`;
+                item.onclick = () => {
+                    const d = charDB[m]; document.getElementById('in-c-name').value = m;
+                    document.getElementById('in-c-rank').value = d.rank; document.getElementById('in-c-talent').value = d.talent || "";
+                    Object.keys(d.stats).forEach(k => document.getElementById(`in-c-${k}`).value = d.stats[k]);
+                    box.style.display = 'none';
+                };
+                box.appendChild(item);
+            });
+            box.style.display = matches.length > 0 ? 'block' : 'none';
+        }
+
+        function openAddCharModal() { editingCharId = null; tempDispatchCity = "未分配"; document.getElementById('charModalTitle').textContent = "新增人物"; document.getElementById('in-c-name').value = ''; document.getElementById('in-c-talent').value = ''; ['build','farm','make','money','adv'].forEach(k => document.getElementById(`in-c-${k}`).value = ''); document.getElementById('btn-delete-char').style.display = 'none'; renderModalCities(); document.getElementById('charModal').classList.add('open'); }
+        function openEditCharModal(id) { editingCharId = id; const char = characters.find(c => c.id === id); tempDispatchCity = char.city; document.getElementById('charModalTitle').textContent = "編輯人物"; document.getElementById('in-c-name').value = char.name; document.getElementById('in-c-rank').value = char.rank; document.getElementById('in-c-talent').value = char.talent || ""; Object.keys(char.stats).forEach(k => document.getElementById(`in-c-${k}`).value = char.stats[k]); renderModalCities(); document.getElementById('btn-delete-char').style.display = 'block'; document.getElementById('charModal').classList.add('open'); }
+        function saveChar() { const name = document.getElementById('in-c-name').value; if(!name) return showToast("⚠️ 請輸入姓名"); const data = { name, rank: document.getElementById('in-c-rank').value, talent: document.getElementById('in-c-talent').value, city: tempDispatchCity, stats: { build: parseInt(document.getElementById('in-c-build').value)||0, farm: parseInt(document.getElementById('in-c-farm').value)||0, make: parseInt(document.getElementById('in-c-make').value)||0, money: parseInt(document.getElementById('in-c-money').value)||0, adv: parseInt(document.getElementById('in-c-adv').value)||0 } }; if(editingCharId) characters[characters.findIndex(c => c.id === editingCharId)] = { id: editingCharId, ...data }; else characters.push({ id: Date.now(), ...data }); saveData(); closeModal('charModal'); renderMainContent(); showToast("✅ 儲存成功"); }
+        function askDeleteChar() { showConfirmCard("刪除人物", "確定要刪除這位角色嗎？", () => { characters = characters.filter(c => c.id !== editingCharId); saveData(); closeModal('charModal'); renderMainContent(); showToast("🗑️ 已刪除"); }); }
+
+        function renderModalCities() {
+            const container = document.getElementById('modalCityGrid'); container.innerHTML = '';
+            ["未分配", ...cities.slice(1)].forEach(c => {
+                const btn = document.createElement('button'); btn.className = `dispatch-btn ${c === tempDispatchCity ? 'selected' : ''}`; btn.textContent = c; btn.onclick = () => { tempDispatchCity = c; renderModalCities(); }; container.appendChild(btn);
+            });
+        }
+
+        function renderCityInfo() {
+            const isWarehouse = (currentCity === "special_root");
+            document.getElementById('addBuildBtn').style.display = isWarehouse ? 'block' : 'none';
+            document.getElementById('build-subtitle').textContent = isWarehouse ? "建築倉庫" : `${currentCity} 建築清單`;
+            const container = document.getElementById('buildingList'); container.innerHTML = '';
+            let list = isWarehouse ? masterBuildings : (cityBuildings[currentCity] || []);
+            list.forEach((b, idx) => {
+                const card = document.createElement('div'); card.className = `card-base building-card`;
+                card.onclick = isWarehouse ? () => openEditBuildingModal(idx) : () => askDeleteCityBuilding(currentCity, idx);
+                card.innerHTML = `<div class="b-color-strip" style="background:${b.color||'#ddd'}"></div><div class="b-info"><span class="b-name">${b.name}</span><span class="b-desc">${b.desc}</span></div>${isWarehouse?`<button class="btn-distribute" onclick="event.stopPropagation(); openDistributeModal(${idx})"><span class="material-symbols-outlined">add_location_alt</span>分配</button>`:''}`;
+                container.appendChild(card);
+            });
+        }
+
+        function askDeleteCityBuilding(city, idx) {
+            const b = cityBuildings[city][idx];
+            showConfirmCard("拆除建築", `確定要拆除 ${city} 的 ${b.name} 嗎？`, () => { cityBuildings[city].splice(idx, 1); saveData(); renderCityInfo(); showToast("🗑️ 建築已拆除"); });
+        }
+
+        function openAddBuildingModal() { editingBuildIdx = null; document.getElementById('in-b-name').value = ""; document.getElementById('in-b-desc').value = ""; document.getElementById('in-b-color').value = "#5dabff"; document.getElementById('color-circle').style.background = "#5dabff"; document.getElementById('btn-delete-build').style.display = 'none'; document.getElementById('buildingModal').classList.add('open'); }
+        function openEditBuildingModal(idx) { editingBuildIdx = idx; const b = masterBuildings[idx]; document.getElementById('in-b-name').value = b.name; document.getElementById('in-b-desc').value = b.desc; document.getElementById('in-b-color').value = b.color; document.getElementById('color-circle').style.background = b.color; document.getElementById('btn-delete-build').style.display = 'block'; document.getElementById('buildingModal').classList.add('open'); }
+        function saveMasterBuilding() { const name = document.getElementById('in-b-name').value; if(!name) return; const bData = { name, color: document.getElementById('in-b-color').value, desc: document.getElementById('in-b-desc').value }; if(editingBuildIdx !== null) masterBuildings[editingBuildIdx] = bData; else masterBuildings.push(bData); saveData(); closeModal('buildingModal'); renderCityInfo(); }
+        function askDeleteBuild() { showConfirmCard("連鎖刪除", "確定要刪除倉庫原型嗎？各城市的同名建築將一併被拆除！", () => { const targetName = masterBuildings[editingBuildIdx].name; masterBuildings.splice(editingBuildIdx, 1); for (let c in cityBuildings) { cityBuildings[c] = cityBuildings[c].filter(b => b.name !== targetName); } saveData(); closeModal('buildingModal'); renderCityInfo(); showToast("🗑️ 已連鎖清除"); }); }
+
+        function openDistributeModal(idx) { distTargetIdx = idx; selectedDistCities = []; const container = document.getElementById('distCityGrid'); container.innerHTML = ''; cities.slice(1).forEach(city => { const btn = document.createElement('button'); btn.className = 'dispatch-btn'; btn.textContent = city; btn.onclick = () => { if(selectedDistCities.includes(city)) selectedDistCities = selectedDistCities.filter(c => c !== city); else selectedDistCities.push(city); btn.classList.toggle('selected'); }; container.appendChild(btn); }); document.getElementById('distributeModal').classList.add('open'); }
+        function confirmDistribution() { if(selectedDistCities.length === 0) return; const b = masterBuildings[distTargetIdx]; selectedDistCities.forEach(city => { if(!cityBuildings[city]) cityBuildings[city] = []; cityBuildings[city].push({...b}); }); saveData(); closeModal('distributeModal'); showToast(`🏗️ 分配完成`); }
+
+        function renderOverview() {
+            const container = document.getElementById('overview-content');
+            const isUnassigned = (currentCity === "special_root");
+            let html = `<div class="overview-divider">駐紮官員</div><div class="char-grid" id="ov-p"></div>`;
+            if (!isUnassigned) html += `<div class="overview-divider">城內建築 (點擊建築拆除)</div><div class="building-list" id="ov-b"></div>`;
+            container.innerHTML = html;
+            const pList = isUnassigned ? characters.filter(c => c.city === "未分配") : characters.filter(c => c.city === currentCity);
+            pList.forEach(char => {
+                const card = document.createElement('div'); card.className = 'card-base char-card';
+                const s = char.stats; const isH = (k) => s[k]>=700?'stat-ultra':(s[k]>=600||(char.highlight&&char.highlight.includes(k)))?'stat-high':'';
+                card.innerHTML = `<div class="card-header-row"><span class="char-name">${char.name}</span><div class="header-tags"><span class="rank-tag bg-${char.rank}">${char.rank}</span></div></div><div class="char-talent">${parseTalent(char.talent)}</div><div class="stats-row"><div class="stat-box"><span class="stat-label">建</span><span class="stat-val ${isH('build')}">${s.build}</span></div><div class="stat-box"><span class="stat-label">農</span><span class="stat-val ${isH('farm')}">${s.farm}</span></div><div class="stat-box"><span class="stat-label">製</span><span class="stat-val ${isH('make')}">${s.make}</span></div><div class="stat-box"><span class="stat-label">理</span><span class="stat-val ${isH('money')}">${s.money}</span></div><div class="stat-box"><span class="stat-label">探</span><span class="stat-val ${isH('adv')}">${s.adv}</span></div></div>`;
+                document.getElementById('ov-p').appendChild(card);
+            });
+            if (!isUnassigned) {
+                (cityBuildings[currentCity] || []).forEach((b, idx) => {
+                    const card = document.createElement('div'); card.className = 'card-base building-card';
+                    card.onclick = () => askDeleteCityBuilding(currentCity, idx);
+                    card.innerHTML = `<div class="b-color-strip" style="background:${b.color||'#ddd'}"></div><div class="b-info"><span class="b-name">${b.name}</span><span class="b-desc">${b.desc}</span></div>`;
+                    document.getElementById('ov-b').appendChild(card);
+                });
+            }
+        }
+
+        function openDataModal() { document.getElementById('data-area').value = JSON.stringify({ characters, masterBuildings, cityBuildings }); document.getElementById('dataModal').classList.add('open'); }
+        function copyData() { document.getElementById('data-area').select(); document.execCommand('copy'); showToast("📋 數據已複製"); }
+        function importData() { showConfirmCard("還原數據", "確定要覆蓋嗎？", () => { try { const d = JSON.parse(document.getElementById('data-area').value); characters = d.characters; masterBuildings = d.masterBuildings; cityBuildings = d.cityBuildings; saveData(); location.reload(); } catch(e) { showToast("❌ 解析失敗"); } }); }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); editingBuildIdx = null; }
+
+        init();
+    </script>
+</body>
+</html>
