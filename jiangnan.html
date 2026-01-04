@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>江南知府</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        /* --- 1. 核心變數 --- */
+        :root {
+            --bg-body: #F2F2F7;
+            --bg-card: #FFFFFF;
+            --bg-input: #E3E3E8;
+            --text-main: #1C1C1E;
+            --text-sub: #8E8E93;
+            --primary: #5dabff;
+            --primary-grad: linear-gradient(135deg, #a3bded 0%, #6991c7 100%);
+            --danger: #FF3B30;
+            --success: #c7c7c7;
+            --rank-tian: #fab75a;
+            --rank-hou: #5a9ffa;
+            --rank-qing: #8fe09d;
+            --rank-shi: #A0A0A5;
+            --radius-m: 12px;
+            --radius-l: 18px;
+            --radius-xl: 24px;
+            --shadow: 0 4px 20px rgba(0,0,0,0.06);
+            --bottom-nav-height: 80px;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+            background-color: var(--bg-body); margin: 0; color: var(--text-main); height: 100vh;
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        /* --- 提示與確認卡片 --- */
+        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 3000; pointer-events: none; }
+        .toast { background: rgba(28, 28, 30, 0.9); color: #fff; padding: 10px 20px; border-radius: 30px; font-size: 0.9rem; font-weight: 500; margin-bottom: 10px; backdrop-filter: blur(10px); animation: toastIn 0.3s ease-out forwards; }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+        #confirm-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 2000; opacity: 0; pointer-events: auto; transition: 0.3s; backdrop-filter: blur(2px); display: none; }
+        #confirm-overlay.open { display: block; opacity: 1; }
+        #confirm-card { position: fixed; top: 0; left: 50%; transform: translate(-50%, -150%); width: 90%; max-width: 400px; background: #fff; border-radius: 24px; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); z-index: 2100; transition: transform 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.1); }
+        #confirm-card.open { transform: translate(-50%, 20px); }
+        .confirm-title { font-weight: 800; margin-bottom: 8px; font-size: 1.2rem; text-align: center; }
+        .confirm-msg { color: var(--text-sub); font-size: 0.95rem; margin-bottom: 20px; text-align: center; line-height: 1.5; }
+
+        /* --- 頂部分頁導航 --- */
+        header { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); z-index: 10; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.05); flex-shrink: 0; }
+        .app-title { text-align: center; font-size: 1.1rem; font-weight: 700; padding: 12px 0 8px 0; }
+        .city-scroll { display: flex; width: 100%; padding: 0 15px; gap: 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+        .city-scroll::-webkit-scrollbar { display: none; }
+        .city-tab { flex-shrink: 0; padding: 8px 18px; border-radius: 30px; color: var(--text-sub); font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: 0.2s; background: transparent; white-space: nowrap; }
+        .city-tab.active { background: var(--text-main); color: #fff; }
+        .city-tab.special-tab { color: var(--primary); background: rgba(0, 122, 255, 0.08); }
+        .city-tab.special-tab.active { background: var(--primary-grad); color: #fff; }
+
+        @media (min-width: 800px) {
+            .city-scroll { overflow-x: hidden; justify-content: center; padding: 0 20px; gap: 10px; }
+            .city-tab { flex: 1; text-align: center; max-width: 140px; }
+        }
+
+        /* --- 主要內容區 --- */
+        main { flex: 1; overflow-y: auto; padding: 20px 20px 110px 20px; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .subtitle { font-size: 1.5rem; font-weight: 800; }
+        .search-container { margin-bottom: 20px; position: relative; }
+        .search-input-main { width: 100%; padding: 12px 16px 12px 42px; border: none; background: #FFFFFF; border-radius: 12px; font-size: 1rem; box-shadow: var(--shadow); }
+        .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 20px; color: var(--text-sub); pointer-events: none; }
+
+        .view-section { display: none; opacity: 0; animation: fadeIn 0.3s forwards; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        .btn-action { background: var(--primary-grad); color: white; border: none; border-radius: 30px; padding: 8px 18px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: transform 0.1s; }
+        .btn-action:active { transform: scale(0.95); }
+
+        /* --- 建築卡片樣式 --- */
+        .building-list { display: grid; gap: 12px; }
+        .building-card { display: flex; align-items: center; gap: 12px; padding-left: 24px; position: relative; }
+        .b-color-strip { position: absolute; left: 0; top: 0; bottom: 0; width: 8px; transition: background 0.3s; }
+        .b-info { flex: 1; min-width: 0; }
+        .b-name { font-weight: 700; display: block; font-size: 1rem; }
+        .b-desc { font-size: 0.85rem; color: var(--text-sub); }
+        
+        .btn-distribute {
+            color: #443c3c;
+            background: #F2F2F7;
+            border: none;
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* --- 卡片通用樣式 --- */
+        .card-base { background: var(--bg-card); border-radius: var(--radius-l); padding: 16px; box-shadow: var(--shadow); margin-bottom: 12px; transition: 0.2s; position: relative; overflow: hidden; }
+        .char-grid { display: grid; gap: 12px; }
+        .char-card { display: flex; flex-direction: column; gap: 12px; }
+        .card-header-row { display: flex; justify-content: space-between; align-items: center; }
+        .char-name { font-size: 1.1rem; font-weight: 700; }
+        .rank-tag { font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; color: #fff; }
+        .bg-天 { background: var(--rank-tian); } .bg-侯 { background: var(--rank-hou); } .bg-卿 { background: var(--rank-qing); } .bg-士 { background: var(--rank-shi); }
+        
+        .char-talent { font-size: 0.85rem; color: var(--text-sub); line-height: 1.5; background: #F9F9FB; padding: 12px; border-radius: var(--radius-m); }
+        .talent-hl { color: var(--primary); font-weight: inherit; text-decoration: none; }
+
+        .stats-row { display: flex; justify-content: space-between; margin-top: 5px; }
+        .stat-box { display: flex; flex-direction: column; align-items: center; flex: 1; }
+        .stat-label { font-size: 0.7rem; color: #B0B0B5; }
+        .stat-val { font-size: 1.1rem; font-weight: 600; }
+        .stat-high { color: var(--primary); font-weight: 800; }
+        .stat-ultra { color: #FF9500; font-weight: 800; }
+
+        /* --- 圓形顏色選擇器樣式 --- */
+        .field-row { display: flex; gap: 12px; margin-bottom: 15px; align-items: flex-end; }
+        .field-row .edit-group { flex: 1; margin-bottom: 0; }
+        .color-picker-wrapper { flex: 0 0 50px; text-align: center; }
+        .circular-color-picker {
+            width: 45px; height: 45px; border-radius: 50%; overflow: hidden;
+            border: 3px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative; cursor: pointer; margin: 0 auto;
+        }
+        .circular-color-picker input[type="color"] {
+            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            cursor: pointer; border: none; padding: 0; opacity: 0;
+        }
+
+        /* 底部導航 */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--bottom-nav-height); background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); border-top: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-around; align-items: center; z-index: 50; padding-bottom: 15px; }
+        .nav-item { flex: 1; text-align: center; color: #C7C7CC; font-size: 0.75rem; cursor: pointer; }
+        .nav-item.active { color: var(--text-main); }
+        .nav-icon { display: block; width: 24px; height: 24px; margin: 0 auto 4px auto; fill: currentColor; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 100; backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 30px; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+        .modal-box { background: #fff; width: 95%; max-width: 500px; border-radius: var(--radius-xl); padding: 30px 24px; max-height: 85vh; overflow-y: auto; transform: translateY(100%); transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); position: relative; }
+        .modal-overlay.open .modal-box { transform: translateY(0); }
+        .modal-box::before { content: ""; display: block; width: 40px; height: 5px; background: #E5E5EA; border-radius: 10px; margin: -10px auto 20px auto; }
+        .modal-title { font-size: 1.25rem; font-weight: 800; margin-bottom: 20px; text-align: center; }
+
+        .edit-group { margin-bottom: 20px; position: relative; }
+        .edit-label { font-size: 0.85rem; color: var(--text-sub); font-weight: 600; margin-bottom: 8px; display: block; }
+        .text-input, .talent-input, .select-input { width: 100%; padding: 14px; border: none; background: var(--bg-input); border-radius: 12px; font-size: 1rem; color: var(--text-main); }
+
+        .city-dispatch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .dispatch-btn { padding: 12px; border: none; background: var(--bg-input); border-radius: 12px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: 0.2s; border: 2px solid transparent; }
+        .dispatch-btn.selected { background: #EAF2FF; color: var(--primary); border-color: var(--primary); }
+
+        .suggestion-container { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 1001; margin-top: 5px; max-height: 200px; overflow-y: auto; display: none; border: 1px solid #eee; }
+        .suggestion-item { padding: 14px 16px; border-bottom: 1px solid #f2f2f7; cursor: pointer; display: flex; justify-content: space-between; }
+
+        .stat-inputs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        .stat-input-wrap { display: flex; flex-direction: column; align-items: center; }
+        .stat-input-wrap input { width: 100%; text-align: center; padding: 12px 0; border: none; background: var(--bg-input); border-radius: 12px; font-size: 1.1rem; font-weight: 700; }
+        .stat-tag-btn { margin-top: 8px; font-size: 0.7rem; color: var(--text-sub); background: #F2F2F7; border: none; padding: 5px 2px; border-radius: 6px; width: 100%; cursor: pointer; }
+        .stat-tag-btn.active { background: var(--primary); color: #fff; }
+
+        .action-btns { margin-top: 25px; display: flex; gap: 12px; }
+        .btn { flex: 1; padding: 14px; border: none; border-radius: 16px; font-weight: 700; cursor: pointer; }
+        .btn-cancel { background: #F2F2F7; color: var(--text-sub); }
+        .btn-save { background: var(--primary-grad); color: white; }
+        .btn-delete { background: #FFF0F0; color: var(--danger); width: 100%; margin-top: 15px; }
+
+        .overview-divider { margin: 30px 0 15px 0; font-size: 0.8rem; font-weight: 600; color: #C7C7CC; display: flex; align-items: center; gap: 10px; }
+        .overview-divider::after { content: ""; flex: 1; height: 1px; background: #E5E5EA; }
+    </style>
+</head>
+<body>
+
+    <div id="toast-container"></div>
+    <div id="confirm-overlay" onclick="handleConfirm(false)"></div>
+    <div id="confirm-card">
+        <div class="confirm-title" id="confirm-title">確認</div>
+        <div class="confirm-msg" id="confirm-msg"></div>
+        <div style="display:flex; gap:12px;">
+            <button class="btn btn-cancel" onclick="handleConfirm(false)">取消</button>
+            <button class="btn btn-save" style="background:var(--danger);" id="confirm-ok-btn" onclick="handleConfirm(true)">確定</button>
+        </div>
+    </div>
+
+    <header>
+        <div class="app-title">江南知府</div>
+        <nav class="city-scroll" id="cityTabs"></nav>
+    </header>
+
+    <main>
+        <!-- 人物 -->
+        <div id="view-people" class="view-section active">
+            <div class="section-header">
+                <div class="subtitle">人員</div>
+                <button class="btn-action" onclick="openAddCharModal()">＋ 新增</button>
+            </div>
+            <div class="search-container">
+                <span class="material-symbols-outlined search-icon">search</span>
+                <input type="text" id="searchInput" class="search-input-main" placeholder="搜尋姓名..." oninput="renderPeople()">
+            </div>
+            <div id="charList" class="char-grid"></div>
+        </div>
+
+        <!-- 建築 -->
+        <div id="view-city" class="view-section">
+            <div class="section-header">
+                <div class="subtitle" id="build-subtitle">建築倉庫</div>
+                <button id="addBuildBtn" class="btn-action" onclick="openAddBuildingModal()">＋ 新增原型</button>
+            </div>
+            <div id="buildingList" class="building-list"></div>
+        </div>
+
+        <!-- 概況 -->
+        <div id="view-overview" class="view-section">
+            <div class="section-header"><div class="subtitle">州府總覽</div></div>
+            <div id="overview-content"></div>
+            <button class="btn" style="background:var(--success); color:#fff; width:100%; margin-top:40px;" onclick="openDataModal()">💾 數據備份 / 還原</button>
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('people')">
+            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            <div>人物</div>
+        </div>
+        <div class="nav-item" onclick="switchTab('city')">
+            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v7H7zm4 0h2v7h-2zm4 0h2v7h-2z"/></svg>
+            <div>建築</div>
+        </div>
+        <div class="nav-item" onclick="switchTab('overview')">
+            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+            <div>概況</div>
+        </div>
+    </nav>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="charModal"><div class="modal-box"><div class="modal-title" id="charModalTitle">編輯人物</div><div class="edit-group"><label class="edit-label">姓名</label><input type="text" id="in-c-name" class="text-input" oninput="handleNameInput()" autocomplete="off"><div id="suggestionBox" class="suggestion-container"></div></div><div class="edit-group"><label class="edit-label">五維屬性</label><div class="stat-inputs"><div class="stat-input-wrap"><input type="number" id="in-c-build"><button class="stat-tag-btn" onclick="setHighlight('build')">建造</button></div><div class="stat-input-wrap"><input type="number" id="in-c-farm"><button class="stat-tag-btn" onclick="setHighlight('farm')">農牧</button></div><div class="stat-input-wrap"><input type="number" id="in-c-make"><button class="stat-tag-btn" onclick="setHighlight('make')">製作</button></div><div class="stat-input-wrap"><input type="number" id="in-c-money"><button class="stat-tag-btn" onclick="setHighlight('money')">理財</button></div><div class="stat-input-wrap"><input type="number" id="in-c-adv"><button class="stat-tag-btn" onclick="setHighlight('adv')">探險</button></div></div></div><div class="edit-group"><label class="edit-label">所在地</label><div class="city-dispatch-grid" id="modalCityGrid"></div></div><div class="action-btns"><button class="btn btn-cancel" onclick="closeModal('charModal')">取消</button><button class="btn btn-save" onclick="saveChar()">儲存</button></div><button id="btn-delete-char" class="btn btn-delete" onclick="askDeleteChar()">刪除</button></div></div>
+
+    <div class="modal-overlay" id="buildingModal">
+        <div class="modal-box">
+            <div class="modal-title">建築原型設定</div>
+            <div class="field-row">
+                <div class="edit-group"><label class="edit-label">名稱</label><input type="text" id="in-b-name" class="text-input"></div>
+                <div class="color-picker-wrapper"><label class="edit-label">顏色</label>
+                    <div class="circular-color-picker" id="color-circle">
+                        <input type="color" id="in-b-color" oninput="document.getElementById('color-circle').style.background=this.value">
+                    </div>
+                </div>
+            </div>
+            <div class="edit-group"><label class="edit-label">備註</label><input type="text" id="in-b-desc" class="text-input"></div>
+            <div class="action-btns"><button class="btn btn-cancel" onclick="closeModal('buildingModal')">取消</button><button class="btn btn-save" onclick="saveMasterBuilding()">儲存</button></div>
+            <button id="btn-delete-build" class="btn btn-delete" onclick="askDeleteBuild()" style="display:none;">連鎖刪除</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="distributeModal"><div class="modal-box"><div class="modal-title">分配至州府</div><div class="city-dispatch-grid" id="distCityGrid"></div><div class="action-btns"><button class="btn btn-cancel" onclick="closeModal('distributeModal')">取消</button><button class="btn btn-save" onclick="confirmDistribution()">確認分配</button></div></div></div>
+
+    <div class="modal-overlay" id="dataModal"><div class="modal-box"><div class="modal-title">數據備份</div><textarea id="data-area" class="text-input" style="height:200px; font-size:0.8rem;"></textarea><div class="action-btns"><button class="btn btn-cancel" onclick="copyData()">複製</button><button class="btn btn-save" onclick="importData()">導入</button></div></div></div>
+
+    <script>
+        const cities = ["special_root", "應天", "蘇州", "杭州", "松江", "徽州", "紹興", "揚州", "雞鳴"];
+        let characters = [], masterBuildings = [], cityBuildings = {};
+        let currentCity = "special_root", currentTab = "people", editingCharId = null;
+        let selectedDistCities = [], distTargetIdx = null, editingBuildIdx = null, tempDispatchCity = "未分配";
+
+        const charDB = {
+            "沈周": { rank: "天", stats: { build: 241, farm: 433, make: 608, money: 778, adv: 612 } },
+            "文徵明": { rank: "侯", stats: { build: 796, farm: 244, make: 253, money: 84, adv: 612 } }
+        };
+
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast'; toast.textContent = msg;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+        }
+
+        let confirmCallback = null;
+        function showConfirmCard(title, msg, callback) {
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-msg').textContent = msg;
+            document.getElementById('confirm-overlay').classList.add('open');
+            document.getElementById('confirm-card').classList.add('open');
+            confirmCallback = callback;
+        }
+
+        function handleConfirm(result) {
+            document.getElementById('confirm-overlay').classList.remove('open');
+            document.getElementById('confirm-card').classList.remove('open');
+            if(result && confirmCallback) confirmCallback();
+            confirmCallback = null;
+        }
+
+        function init() {
+            loadData();
+            renderCityTabs();
+            renderMainContent();
+            window.addEventListener('click', (e) => {
+                const box = document.getElementById('suggestionBox');
+                if (e.target.id !== 'in-c-name' && e.target.id !== 'suggestionBox') box.style.display = 'none';
+            });
+        }
+
+        function loadData() {
+            characters = JSON.parse(localStorage.getItem('jiangnan_chars_v16') || '[]');
+            masterBuildings = JSON.parse(localStorage.getItem('jiangnan_master_v16') || '[]');
+            cityBuildings = JSON.parse(localStorage.getItem('jiangnan_cityb_v16') || '{}');
+            cities.forEach(c => { if(c !== "special_root" && !cityBuildings[c]) cityBuildings[c] = []; });
+        }
+
+        function saveData() {
+            localStorage.setItem('jiangnan_chars_v16', JSON.stringify(characters));
+            localStorage.setItem('jiangnan_master_v16', JSON.stringify(masterBuildings));
+            localStorage.setItem('jiangnan_cityb_v16', JSON.stringify(cityBuildings));
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            // 概況預設顯示應天
+            if(tab === 'overview' && currentCity === 'special_root') currentCity = "應天";
+            // 建築分頁預設顯示倉庫
+            if(tab === 'city') currentCity = "special_root";
+
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            const idx = { 'people': 0, 'city': 1, 'overview': 2 }[tab];
+            document.querySelectorAll('.nav-item')[idx].classList.add('active');
+            
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(`view-${tab}`).classList.add('active');
+            
+            renderCityTabs(); 
+            renderMainContent();
+        }
+
+        function renderCityTabs() {
+            const container = document.getElementById('cityTabs'); container.innerHTML = '';
+            // 概況模式過濾未分類
+            const list = (currentTab === 'overview') ? cities.slice(1) : cities;
+            
+            list.forEach(city => {
+                const btn = document.createElement('div');
+                let name = (city === "special_root") ? (currentTab==='people'?'全部': '倉庫') : city;
+                btn.className = `city-tab ${city === "special_root" ? 'special-tab' : ''} ${city === currentCity ? 'active' : ''}`;
+                btn.textContent = name;
+                btn.onclick = () => { currentCity = city; renderCityTabs(); renderMainContent(); };
+                container.appendChild(btn);
+            });
+        }
+
+        function renderMainContent() { 
+            if(currentTab === 'people') renderPeople(); 
+            else if(currentTab === 'city') renderCityInfo(); 
+            else renderOverview(); 
+        }
+
+        // --- 人物 ---
+        function renderPeople() {
+            const search = document.getElementById('searchInput').value.trim();
+            const container = document.getElementById('charList'); container.innerHTML = '';
+            let filtered = search ? characters.filter(c => c.name.includes(search)) : characters.filter(c => (currentCity === "special_root" ? true : c.city === currentCity));
+            filtered.forEach(char => {
+                const card = document.createElement('div'); card.className = 'card-base char-card'; card.onclick = () => openEditCharModal(char.id);
+                const s = char.stats;
+                const isH = (k) => (s[k] >= 700) ? 'stat-ultra' : (s[k] >= 600) ? 'stat-high' : '';
+                card.innerHTML = `<div class="card-header-row"><span class="char-name">${char.name}</span><span class="rank-tag bg-${char.rank||'士'}">${char.rank||'士'}</span></div><div class="stats-row"><div class="stat-box"><span class="stat-label">建</span><span class="stat-val ${isH('build')}">${s.build}</span></div><div class="stat-box"><span class="stat-label">農</span><span class="stat-val ${isH('farm')}">${s.farm}</span></div><div class="stat-box"><span class="stat-label">製</span><span class="stat-val ${isH('make')}">${s.make}</span></div><div class="stat-box"><span class="stat-label">理</span><span class="stat-val ${isH('money')}">${s.money}</span></div><div class="stat-box"><span class="stat-label">探</span><span class="stat-val ${isH('adv')}">${s.adv}</span></div></div>`;
+                container.appendChild(card);
+            });
+        }
+
+        // --- 建築 (修正：分開倉庫與州府顯示) ---
+        function renderCityInfo() {
+            const container = document.getElementById('buildingList'); container.innerHTML = '';
+            const addBtn = document.getElementById('addBuildBtn');
+            const subTitle = document.getElementById('build-subtitle');
+
+            if (currentCity === "special_root") {
+                // 顯示倉庫原型
+                subTitle.textContent = "建築倉庫";
+                addBtn.style.display = "block";
+                masterBuildings.forEach((b, idx) => {
+                    const card = document.createElement('div'); card.className = 'card-base building-card';
+                    card.onclick = () => openEditBuildingModal(idx);
+                    card.innerHTML = `<div class="b-color-strip" style="background:${b.color}"></div><div class="b-info"><span class="b-name">${b.name}</span><span class="b-desc">${b.desc}</span></div><button class="btn-distribute" onclick="event.stopPropagation(); openDistributeModal(${idx})"><span class="material-symbols-outlined">add_location_alt</span>分配</button>`;
+                    container.appendChild(card);
+                });
+            } else {
+                // 顯示特定州府已分配建築
+                subTitle.textContent = `${currentCity} 建築清單`;
+                addBtn.style.display = "none";
+                const list = cityBuildings[currentCity] || [];
+                if(list.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; padding:40px; color:#8E8E93;">此州府尚無分配建築</div>';
+                }
+                list.forEach((b, idx) => {
+                    const card = document.createElement('div'); card.className = 'card-base building-card';
+                    card.onclick = () => {
+                        showConfirmCard("拆除建築", `確定要拆除 ${currentCity} 的 ${b.name} 嗎？`, () => {
+                            cityBuildings[currentCity].splice(idx, 1);
+                            saveData(); renderCityInfo();
+                        });
+                    };
+                    card.innerHTML = `<div class="b-color-strip" style="background:${b.color}"></div><div class="b-info"><span class="b-name">${b.name}</span><span class="b-desc">${b.desc}</span></div>`;
+                    container.appendChild(card);
+                });
+            }
+        }
+
+        function renderOverview() {
+            const container = document.getElementById('overview-content');
+            container.innerHTML = `<div class="overview-divider">駐紮官員</div><div class="char-grid" id="ov-p"></div><div class="overview-divider">城內建築</div><div class="building-list" id="ov-b"></div>`;
+            const pList = characters.filter(c => c.city === currentCity);
+            const bList = cityBuildings[currentCity] || [];
+            pList.forEach(char => {
+                const card = document.createElement('div'); card.className = 'card-base char-card';
+                card.innerHTML = `<div class="card-header-row"><span class="char-name">${char.name}</span></div>`;
+                document.getElementById('ov-p').appendChild(card);
+            });
+            bList.forEach((b) => {
+                const card = document.createElement('div'); card.className = 'card-base building-card';
+                card.innerHTML = `<div class="b-color-strip" style="background:${b.color}"></div><div class="b-info"><span class="b-name">${b.name}</span><span class="b-desc">${b.desc}</span></div>`;
+                document.getElementById('ov-b').appendChild(card);
+            });
+        }
+
+        // 其餘輔助函式 (同 v16.2)
+        function handleNameInput() {
+            const val = document.getElementById('in-c-name').value.trim();
+            const box = document.getElementById('suggestionBox'); box.innerHTML = '';
+            if(!val) { box.style.display = 'none'; return; }
+            const matches = Object.keys(charDB).filter(n => n.includes(val));
+            matches.forEach(m => {
+                const item = document.createElement('div'); item.className = 'suggestion-item';
+                item.innerHTML = `<span>${m}</span>`;
+                item.onclick = (e) => {
+                    e.stopPropagation(); const data = charDB[m];
+                    document.getElementById('in-c-name').value = m;
+                    Object.keys(data.stats).forEach(k => document.getElementById(`in-c-${k}`).value = data.stats[k]);
+                    box.style.display = 'none';
+                };
+                box.appendChild(item);
+            });
+            box.style.display = matches.length > 0 ? 'block' : 'none';
+        }
+
+        function openAddCharModal() { editingCharId = null; tempDispatchCity = "未分配"; document.getElementById('in-c-name').value = ''; renderModalCities(); document.getElementById('charModal').classList.add('open'); }
+        function openEditCharModal(id) { editingCharId = id; const char = characters.find(c => c.id === id); tempDispatchCity = char.city; document.getElementById('in-c-name').value = char.name; Object.keys(char.stats).forEach(k => document.getElementById(`in-c-${k}`).value = char.stats[k]); renderModalCities(); document.getElementById('charModal').classList.add('open'); }
+        function saveChar() { const name = document.getElementById('in-c-name').value; if(!name) return; const data = { name, rank: "天", city: tempDispatchCity, stats: { build: parseInt(document.getElementById('in-c-build').value)||0, farm: parseInt(document.getElementById('in-c-farm').value)||0, make: parseInt(document.getElementById('in-c-make').value)||0, money: parseInt(document.getElementById('in-c-money').value)||0, adv: parseInt(document.getElementById('in-c-adv').value)||0 } }; if(editingCharId) characters[characters.findIndex(c => c.id === editingCharId)] = { id: editingCharId, ...data }; else characters.push({ id: Date.now(), ...data }); saveData(); closeModal('charModal'); renderMainContent(); }
+        function renderModalCities() { const container = document.getElementById('modalCityGrid'); container.innerHTML = ''; ["未分配", ...cities.slice(1)].forEach(c => { const btn = document.createElement('button'); btn.className = `dispatch-btn ${c === tempDispatchCity ? 'selected' : ''}`; btn.textContent = c; btn.onclick = () => { tempDispatchCity = c; renderModalCities(); }; container.appendChild(btn); }); }
+        function openAddBuildingModal() { editingBuildIdx = null; document.getElementById('in-b-name').value = ''; document.getElementById('in-b-desc').value = ''; document.getElementById('in-b-color').value = '#5dabff'; document.getElementById('color-circle').style.background = '#5dabff'; document.getElementById('btn-delete-build').style.display = 'none'; document.getElementById('buildingModal').classList.add('open'); }
+        function openEditBuildingModal(idx) { editingBuildIdx = idx; const b = masterBuildings[idx]; document.getElementById('in-b-name').value = b.name; document.getElementById('in-b-desc').value = b.desc; document.getElementById('in-b-color').value = b.color; document.getElementById('color-circle').style.background = b.color; document.getElementById('btn-delete-build').style.display = 'block'; document.getElementById('buildingModal').classList.add('open'); }
+        function saveMasterBuilding() { const name = document.getElementById('in-b-name').value; if(!name) return; const bData = { name, color: document.getElementById('in-b-color').value, desc: document.getElementById('in-b-desc').value }; if(editingBuildIdx !== null) masterBuildings[editingBuildIdx] = bData; else masterBuildings.push(bData); saveData(); closeModal('buildingModal'); renderCityInfo(); }
+        function openDistributeModal(idx) { distTargetIdx = idx; selectedDistCities = []; const container = document.getElementById('distCityGrid'); container.innerHTML = ''; cities.slice(1).forEach(city => { const btn = document.createElement('button'); btn.className = 'dispatch-btn'; btn.textContent = city; btn.onclick = () => { if(selectedDistCities.includes(city)) selectedDistCities = selectedDistCities.filter(c => c !== city); else selectedDistCities.push(city); btn.classList.toggle('selected'); }; container.appendChild(btn); }); document.getElementById('distributeModal').classList.add('open'); }
+        function confirmDistribution() { if(selectedDistCities.length === 0) return showToast("⚠️ 未選擇城市"); const b = masterBuildings[distTargetIdx]; selectedDistCities.forEach(city => { cityBuildings[city].push({...b, instId: Date.now() + Math.random()}); }); saveData(); closeModal('distributeModal'); showToast(`🏗️ 已分配建築`); }
+        function openDataModal() { document.getElementById('data-area').value = JSON.stringify({ characters, masterBuildings, cityBuildings }); document.getElementById('dataModal').classList.add('open'); }
+        function copyData() { document.getElementById('data-area').select(); document.execCommand('copy'); showToast("📋 複製成功"); }
+        function importData() { try { const d = JSON.parse(document.getElementById('data-area').value); characters = d.characters; masterBuildings = d.masterBuildings; cityBuildings = d.cityBuildings; saveData(); location.reload(); } catch(e) { alert("失敗"); } }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+        function setHighlight(k) {}
+
+        init();
+    </script>
+</body>
+</html>
