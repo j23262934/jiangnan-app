@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>江南知府 v16.7</title>
+    <title>江南知府 v16.8</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
         /* --- 1. 核心變數 --- */
@@ -16,7 +16,7 @@
             --primary: #5dabff;
             --primary-grad: linear-gradient(135deg, #a3bded 0%, #6991c7 100%);
             --danger: #FF3B30;
-            --success: #c7c7c7;
+            --success: #34C759;
             --rank-tian: #fab75a;
             --rank-hou: #5a9ffa;
             --rank-qing: #8fe09d;
@@ -58,12 +58,10 @@
         .city-tab.special-tab { color: var(--primary); background: rgba(0, 122, 255, 0.08); }
         .city-tab.special-tab.active { background: var(--primary-grad); color: #fff; }
 
-        /* 主要內容區佈局修復 */
         main { flex: 1; overflow-y: auto; padding: 20px 20px 110px 20px; }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; width: 100%; }
         .subtitle { font-size: 1.5rem; font-weight: 800; }
         .btn-action { background: var(--primary-grad); color: white; border: none; border-radius: 30px; padding: 8px 18px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: transform 0.1s; flex-shrink: 0; }
-        .btn-action:active { transform: scale(0.95); }
 
         .search-container { margin-bottom: 20px; position: relative; }
         .search-input-main { width: 100%; padding: 12px 16px 12px 42px; border: none; background: #FFFFFF; border-radius: 12px; font-size: 1rem; box-shadow: var(--shadow); }
@@ -73,50 +71,46 @@
         .view-section.active { display: block; }
         @keyframes fadeIn { to { opacity: 1; } }
 
-        /* --- 卡片樣式 --- */
+        /* --- 卡片通用 --- */
         .card-base { background: var(--bg-card); border-radius: var(--radius-l); padding: 16px; box-shadow: var(--shadow); margin-bottom: 12px; transition: 0.2s; position: relative; overflow: hidden; cursor: pointer; }
-        .char-grid { display: grid; gap: 12px; }
-        .char-card { display: flex; flex-direction: column; gap: 12px; }
-        .card-header-row { display: flex; justify-content: space-between; align-items: center; }
-        .char-name { font-size: 1.1rem; font-weight: 700; }
-        .rank-tag { font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; color: #fff; }
+        .rank-tag { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; color: #fff; }
         .bg-天 { background: var(--rank-tian); } .bg-侯 { background: var(--rank-hou); } .bg-卿 { background: var(--rank-qing); } .bg-士 { background: var(--rank-shi); }
         
-        .char-talent { font-size: 0.85rem; color: var(--text-sub); line-height: 1.5; background: #F9F9FB; padding: 12px; border-radius: var(--radius-m); }
+        .char-talent { font-size: 0.85rem; color: var(--text-sub); line-height: 1.5; background: #F9F9FB; padding: 10px; border-radius: var(--radius-m); margin-top: 8px; }
         .talent-hl { color: var(--primary); font-weight: 800; }
 
-        .stats-row { display: flex; justify-content: space-between; margin-top: 5px; }
+        .stats-row { display: flex; justify-content: space-between; margin-top: 10px; }
         .stat-box { display: flex; flex-direction: column; align-items: center; flex: 1; }
         .stat-label { font-size: 0.7rem; color: #B0B0B5; }
-        .stat-val { font-size: 1.1rem; font-weight: 600; }
+        .stat-val { font-size: 1rem; font-weight: 600; }
         .stat-high { color: var(--primary); font-weight: 800; }
         .stat-ultra { color: #FF9500; font-weight: 800; }
 
-        /* --- 建築樣式 --- */
-        .building-list { display: grid; gap: 12px; }
-        .building-card { display: flex; align-items: center; gap: 12px; padding-left: 24px; position: relative; }
-        .b-color-strip { position: absolute; left: 0; top: 0; bottom: 0; width: 8px; transition: background 0.3s; }
+        /* --- 建築通用 --- */
+        .building-card { display: flex; align-items: center; gap: 12px; padding-left: 20px; position: relative; }
+        .b-color-strip { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; }
         .b-info { flex: 1; min-width: 0; }
-        .b-name { font-weight: 700; display: block; font-size: 1rem; }
-        .b-desc { font-size: 0.85rem; color: var(--text-sub); }
-        .btn-distribute { color: #443c3c; background: #F2F2F7; border: none; border-radius: 20px; padding: 6px 12px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .b-name { font-weight: 700; font-size: 0.95rem; }
+        .b-desc { font-size: 0.8rem; color: var(--text-sub); }
 
-        /* --- 彈窗內的並列佈局 --- */
-        .field-row { display: flex; gap: 12px; margin-bottom: 15px; align-items: flex-end; }
-        .edit-group { margin-bottom: 0; position: relative; }
+        /* --- 概況專用緊湊樣式 --- */
+        .overview-divider { margin: 25px 0 12px 0; font-size: 0.85rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+        .ov-count-tag { font-size: 0.7rem; background: #E5E5EA; color: #8E8E93; padding: 2px 8px; border-radius: 10px; font-weight: normal; }
         
-        .color-picker-wrapper { flex: 0 0 50px; text-align: center; margin-bottom: 0; }
-        .circular-color-picker {
-            width: 45px; height: 45px; border-radius: 50%; overflow: hidden;
-            border: 3px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: relative; cursor: pointer; margin: 0 auto;
-        }
-        .circular-color-picker input[type="color"] {
-            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            cursor: pointer; border: none; padding: 0; opacity: 0;
-        }
+        /* 概況人物網格 (2欄) */
+        .ov-char-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .ov-char-card { padding: 12px !important; margin-bottom: 0 !important; }
+        .ov-char-card .stats-row { display: none; } /* 概況隱藏數值 */
+        .ov-char-card .char-name { font-size: 0.95rem; }
+        .ov-char-card .char-talent { font-size: 0.75rem; padding: 6px; margin-top: 6px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
-        /* 底部選單 */
+        /* 概況建築網格 (2欄) */
+        .ov-build-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .ov-build-card { padding: 10px 10px 10px 16px !important; margin-bottom: 0 !important; min-height: 44px; }
+        .ov-build-card .b-desc { display: none; } /* 概況隱藏描述 */
+        .ov-build-card .b-name { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* 底部導航 */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--bottom-nav-height); background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); border-top: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-around; align-items: center; z-index: 50; padding-bottom: 15px; }
         .nav-item { flex: 1; text-align: center; color: #C7C7CC; font-size: 0.75rem; cursor: pointer; }
         .nav-item.active { color: var(--text-main); }
@@ -125,7 +119,7 @@
         /* Modal */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 100; backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 30px; opacity: 0; pointer-events: none; transition: 0.3s; }
         .modal-overlay.open { opacity: 1; pointer-events: auto; }
-        .modal-box { background: #fff; width: 95%; max-width: 500px; border-radius: var(--radius-xl); padding: 30px 24px; max-height: 85vh; overflow-y: auto; transform: translateY(100%); transition: 0.3s; position: relative; }
+        .modal-box { background: #fff; width: 95%; max-width: 500px; border-radius: var(--radius-xl); padding: 30px 24px; max-height: 85vh; overflow-y: auto; transform: translateY(100%); transition: 0.3s; }
         .modal-overlay.open .modal-box { transform: translateY(0); }
         .modal-title { font-size: 1.25rem; font-weight: 800; margin-bottom: 20px; text-align: center; }
         
@@ -149,8 +143,12 @@
         .btn-save-full { background: var(--primary-grad); color: white; }
         .btn-delete { background: #FFF0F0; color: var(--danger); width: 100%; margin-top: 15px; }
 
-        .overview-divider { margin: 30px 0 15px 0; font-size: 0.8rem; font-weight: 600; color: #C7C7CC; display: flex; align-items: center; gap: 10px; }
-        .overview-divider::after { content: ""; flex: 1; height: 1px; background: #E5E5EA; }
+        .btn-distribute { color: #443c3c; background: #F2F2F7; border: none; border-radius: 20px; padding: 6px 12px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+
+        /* 顏色選取器 */
+        .color-picker-wrapper { flex: 0 0 50px; text-align: center; }
+        .circular-color-picker { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: relative; cursor: pointer; margin: 0 auto; }
+        .circular-color-picker input[type="color"] { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; cursor: pointer; opacity: 0; }
     </style>
 </head>
 <body>
@@ -167,7 +165,7 @@
     </div>
 
     <header>
-        <div class="app-title">江南知府 v16.7</div>
+        <div class="app-title">江南知府 v16.8</div>
         <nav class="city-scroll" id="cityTabs"></nav>
     </header>
 
@@ -212,8 +210,8 @@
     <div class="modal-overlay" id="charModal">
         <div class="modal-box">
             <div class="modal-title" id="charModalTitle">編輯人物</div>
-            <div class="field-row">
-                <div class="edit-group" style="flex:1;">
+            <div class="field-row" style="display:flex; gap:12px; margin-bottom:15px; align-items:flex-end;">
+                <div class="edit-group" style="flex:1; position:relative;">
                     <label class="edit-label">姓名</label>
                     <input type="text" id="in-c-name" class="text-input" oninput="handleNameInput()" autocomplete="off">
                     <div id="suggestionBox" class="suggestion-container"></div>
@@ -254,7 +252,7 @@
     <div class="modal-overlay" id="buildingModal">
         <div class="modal-box">
             <div class="modal-title" id="buildModalTitle">原型設定</div>
-            <div class="field-row">
+            <div class="field-row" style="display:flex; gap:12px; margin-bottom:15px; align-items:flex-end;">
                 <div class="edit-group" style="flex:1;">
                     <label class="edit-label">名稱</label>
                     <input type="text" id="in-b-name" class="text-input">
@@ -283,7 +281,7 @@
     <div class="modal-overlay" id="dataModal"><div class="modal-box"><div class="modal-title">數據操作</div><textarea id="data-area" class="text-input" style="height:200px; font-size:0.8rem; font-family:monospace;"></textarea><div class="action-btns"><button class="btn btn-cancel" onclick="copyData()">複製</button><button class="btn btn-save-full" onclick="importData()">導入</button></div></div></div>
 
     <script>
-        // --- 完整的人物資料庫 ---
+        // --- 人物資料庫 ---
         const charDB = {
             "沈周": { rank: "天", talent: "在[商業建築]工作時，立即完成[20%]進度，且[無需]工人。", stats: { build: 241, farm: 433, make: 608, money: 778, adv: 612 }, }, 
             "王如一": { rank: "侯", talent: "負責[滅火]工作時，立即完成[5%]進度。", stats: { build: 271, farm: 65, make: 301, money: 420, adv: 388 }, },
@@ -359,8 +357,7 @@
             "姜壽": { rank: "侯", talent: "在[壽材店]工作時，銅錢收入提升[50%]，並隨機獲得[5]份資源。", stats: { build: 434, farm: 93, make: 238, money: 601, adv: 238 }, }, 
             "金鯉": { rank: "侯", talent: "負責1小時以上的[理財]工作時，銅錢收入提升[30%]，且有[50%]機率額外獲得1個上上籤。", stats: { build: 93, farm: 416, make: 416, money: 601, adv: 86 }, }, 
             "雲晴雪": { rank: "侯", talent: "[建造或升級]1小時以上建築時，立即完成[8%]進度，且所需工人[-1]。", stats: { build: 602, farm: 254, make: 87, money: 429, adv: 417 }, }, 
-            "杜言行": { rank: "侯", talent: "負責1小時以上[農牧]工作時，立即完成[6%]進度，且物品掉落率提升[30%]。", stats: { build: 65, farm: 602, make: 87, money: 417, adv: 245 }, }, 
-            "沈周": { rank: "天", talent: "負責[任意工作]時，立即完成[5%]進度，且所需工人[-1]。", stats: { build: 424, farm: 610, make: 793, money: 610, adv: 97 }, }, 
+            "杜言行": { rank: "侯", talent: "負責1小時以上[農牧]工作時，立即完成[6%]進度，且物品掉落率提升[30%]。", stats: { build: 65, farm: 602, make: 87, money: 417, adv: 245 }, },  
             "向斜陽": { rank: "天", talent: "負責1小時以上[製作]時，有[8%]機率立即完成，且所需工人[-1]。", stats: { build: 247, farm: 608, make: 778, money: 433, adv: 66 }, }, 
             "玄奘": { rank: "天", talent: "負責[任意工作]時，菜餚需求[-30%]，驅逐鬼怪時，立即完成[15%]進度。", stats: { build: 614, farm: 780, make: 424, money: 243, adv: 796 }, }, 
             "徐禎卿": { rank: "天", talent: "在[商業建築]中負責3小時以上工作時，立即完成[30%]進度，且所需工人[-2]。", stats: { build: 780, farm: 440, make: 243, money: 793, adv: 97 }, }, 
@@ -399,7 +396,7 @@
         const cities = ["special_root", "應天", "蘇州", "杭州", "松江", "徽州", "紹興", "揚州", "雞鳴"];
         let characters = [], masterBuildings = [], cityBuildings = {};
         let currentCity = "special_root", currentTab = "people", editingCharId = null;
-        let selectedHighlights = [], tempDispatchCity = "未分配", editingBuildIdx = null, distTargetIdx = null, selectedDistCities = [];
+        let tempDispatchCity = "未分配", editingBuildIdx = null, distTargetIdx = null, selectedDistCities = [];
         let confirmCallback = null;
 
         function showToast(msg) {
@@ -477,7 +474,7 @@
             let filtered = search ? characters.filter(c => c.name.includes(search)) : characters.filter(c => (currentCity === "special_root" ? true : c.city === currentCity));
             filtered.forEach(char => {
                 const card = document.createElement('div'); card.className = 'card-base char-card'; card.onclick = () => openEditCharModal(char.id);
-                const s = char.stats; const isH = (k) => s[k]>=700?'stat-ultra':(s[k]>=600||(char.highlight&&char.highlight.includes(k)))?'stat-high':'';
+                const s = char.stats; const isH = (k) => s[k]>=700?'stat-ultra':(s[k]>=600)?'stat-high':'';
                 card.innerHTML = `<div class="card-header-row"><span class="char-name">${char.name}</span><div class="header-tags"><span class="rank-tag bg-${char.rank}">${char.rank}</span></div></div><div class="char-talent">${parseTalent(char.talent)}</div><div class="stats-row"><div class="stat-box"><span class="stat-label">建</span><span class="stat-val ${isH('build')}">${s.build}</span></div><div class="stat-box"><span class="stat-label">農</span><span class="stat-val ${isH('farm')}">${s.farm}</span></div><div class="stat-box"><span class="stat-label">製</span><span class="stat-val ${isH('make')}">${s.make}</span></div><div class="stat-box"><span class="stat-label">理</span><span class="stat-val ${isH('money')}">${s.money}</span></div><div class="stat-box"><span class="stat-label">探</span><span class="stat-val ${isH('adv')}">${s.adv}</span></div></div>`;
                 container.appendChild(card);
             });
@@ -530,7 +527,7 @@
 
         function askDeleteCityBuilding(city, idx) {
             const b = cityBuildings[city][idx];
-            showConfirmCard("拆除建築", `確定要拆除 ${city} 的 ${b.name} 嗎？`, () => { cityBuildings[city].splice(idx, 1); saveData(); renderCityInfo(); showToast("🗑️ 建築已拆除"); });
+            showConfirmCard("拆除建築", `確定要拆除 ${city} 的 ${b.name} 嗎？`, () => { cityBuildings[city].splice(idx, 1); saveData(); renderOverview(); renderCityInfo(); showToast("🗑️ 建築已拆除"); });
         }
 
         function openAddBuildingModal() { editingBuildIdx = null; document.getElementById('in-b-name').value = ""; document.getElementById('in-b-desc').value = ""; document.getElementById('in-b-color').value = "#5dabff"; document.getElementById('color-circle').style.background = "#5dabff"; document.getElementById('btn-delete-build').style.display = 'none'; document.getElementById('buildingModal').classList.add('open'); }
@@ -544,21 +541,49 @@
         function renderOverview() {
             const container = document.getElementById('overview-content');
             const isUnassigned = (currentCity === "special_root");
-            let html = `<div class="overview-divider">駐紮官員</div><div class="char-grid" id="ov-p"></div>`;
-            if (!isUnassigned) html += `<div class="overview-divider">城內建築 (點擊建築拆除)</div><div class="building-list" id="ov-b"></div>`;
-            container.innerHTML = html;
             const pList = isUnassigned ? characters.filter(c => c.city === "未分配") : characters.filter(c => c.city === currentCity);
+            const bList = cityBuildings[currentCity] || [];
+
+            let html = `
+                <div class="overview-divider">
+                    駐紮官員 <span class="ov-count-tag">${pList.length} 人</span>
+                </div>
+                <div class="ov-char-grid" id="ov-p"></div>
+            `;
+            
+            if (!isUnassigned) {
+                html += `
+                    <div class="overview-divider">
+                        城內建築 <span class="ov-count-tag">${bList.length} 座</span>
+                    </div>
+                    <div class="ov-build-grid" id="ov-b"></div>
+                `;
+            }
+            container.innerHTML = html;
+
             pList.forEach(char => {
-                const card = document.createElement('div'); card.className = 'card-base char-card';
-                const s = char.stats; const isH = (k) => s[k]>=700?'stat-ultra':(s[k]>=600||(char.highlight&&char.highlight.includes(k)))?'stat-high':'';
-                card.innerHTML = `<div class="card-header-row"><span class="char-name">${char.name}</span><div class="header-tags"><span class="rank-tag bg-${char.rank}">${char.rank}</span></div></div><div class="char-talent">${parseTalent(char.talent)}</div><div class="stats-row"><div class="stat-box"><span class="stat-label">建</span><span class="stat-val ${isH('build')}">${s.build}</span></div><div class="stat-box"><span class="stat-label">農</span><span class="stat-val ${isH('farm')}">${s.farm}</span></div><div class="stat-box"><span class="stat-label">製</span><span class="stat-val ${isH('make')}">${s.make}</span></div><div class="stat-box"><span class="stat-label">理</span><span class="stat-val ${isH('money')}">${s.money}</span></div><div class="stat-box"><span class="stat-label">探</span><span class="stat-val ${isH('adv')}">${s.adv}</span></div></div>`;
+                const card = document.createElement('div');
+                card.className = 'card-base char-card ov-char-card';
+                card.onclick = () => openEditCharModal(char.id);
+                card.innerHTML = `
+                    <div class="card-header-row">
+                        <span class="char-name">${char.name}</span>
+                        <span class="rank-tag bg-${char.rank}">${char.rank}</span>
+                    </div>
+                    <div class="char-talent">${parseTalent(char.talent)}</div>
+                `;
                 document.getElementById('ov-p').appendChild(card);
             });
+
             if (!isUnassigned) {
-                (cityBuildings[currentCity] || []).forEach((b, idx) => {
-                    const card = document.createElement('div'); card.className = 'card-base building-card';
+                bList.forEach((b, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'card-base building-card ov-build-card';
                     card.onclick = () => askDeleteCityBuilding(currentCity, idx);
-                    card.innerHTML = `<div class="b-color-strip" style="background:${b.color||'#ddd'}"></div><div class="b-info"><span class="b-name">${b.name}</span><span class="b-desc">${b.desc}</span></div>`;
+                    card.innerHTML = `
+                        <div class="b-color-strip" style="background:${b.color||'#ddd'}"></div>
+                        <div class="b-info"><span class="b-name">${b.name}</span></div>
+                    `;
                     document.getElementById('ov-b').appendChild(card);
                 });
             }
