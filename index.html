@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>江南知府 v17.0</title>
+    <title>江南知府 v17.1</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
         /* --- 1. 核心變數 --- */
@@ -71,27 +71,36 @@
         .view-section.active { display: block; }
         @keyframes fadeIn { to { opacity: 1; } }
 
-        /* --- 卡片樣式 --- */
-        .card-base { background: var(--bg-card); border-radius: var(--radius-l); padding: 16px; box-shadow: var(--shadow); margin-bottom: 12px; transition: 0.2s; position: relative; overflow: hidden; cursor: pointer; }
-        .rank-tag { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; color: #fff; }
+        /* --- 卡片樣式 (兩欄優化) --- */
+        .card-base { background: var(--bg-card); border-radius: var(--radius-l); padding: 12px; box-shadow: var(--shadow); margin-bottom: 10px; transition: 0.2s; position: relative; overflow: hidden; cursor: pointer; }
+        
+        /* 人物與建築列表改為兩欄 */
+        .char-grid, .building-list { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 10px; 
+        }
+
+        .rank-tag { font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 20px; color: #fff; }
         .bg-天 { background: var(--rank-tian); } .bg-侯 { background: var(--rank-hou); } .bg-卿 { background: var(--rank-qing); } .bg-士 { background: var(--rank-shi); }
         
-        .char-talent { font-size: 0.85rem; color: var(--text-sub); line-height: 1.5; background: #F9F9FB; padding: 10px; border-radius: var(--radius-m); margin-top: 8px; }
+        .char-talent { font-size: 0.75rem; color: var(--text-sub); line-height: 1.4; background: #F9F9FB; padding: 8px; border-radius: var(--radius-m); margin-top: 6px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
         .talent-hl { color: var(--primary); font-weight: 800; }
 
-        .stats-row { display: flex; justify-content: space-between; margin-top: 10px; }
-        .stat-box { display: flex; flex-direction: column; align-items: center; flex: 1; }
-        .stat-label { font-size: 0.7rem; color: #B0B0B5; }
-        .stat-val { font-size: 1rem; font-weight: 600; }
+        .stats-row { display: flex; justify-content: space-between; margin-top: 8px; flex-wrap: wrap; gap: 2px; }
+        .stat-box { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 25px; }
+        .stat-label { font-size: 0.6rem; color: #B0B0B5; }
+        .stat-val { font-size: 0.85rem; font-weight: 600; }
         .stat-high { color: var(--primary); font-weight: 800; }
         .stat-ultra { color: #FF9500; font-weight: 800; }
 
-        /* --- 建築樣式 --- */
-        .building-card { display: flex; align-items: center; gap: 12px; padding-left: 20px; position: relative; }
-        .b-color-strip { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; }
-        .b-info { flex: 1; min-width: 0; }
-        .b-name { font-weight: 700; font-size: 0.95rem; }
-        .b-desc { font-size: 0.8rem; color: var(--text-sub); }
+        /* --- 建築樣式 (兩欄優化) --- */
+        .building-card { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 12px 10px 10px 16px; position: relative; }
+        .b-color-strip { position: absolute; left: 0; top: 0; bottom: 0; width: 5px; }
+        .b-info { width: 100%; min-width: 0; }
+        .b-name { font-weight: 700; font-size: 0.9rem; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .b-desc { font-size: 0.75rem; color: var(--text-sub); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .btn-distribute { width: 100%; margin-top: 4px; color: #443c3c; background: #F2F2F7; border: none; border-radius: 20px; padding: 5px 0; font-size: 0.75rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 2px; }
 
         /* --- 概況專用緊湊樣式 --- */
         .overview-divider { margin: 25px 0 12px 0; font-size: 0.85rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
@@ -102,16 +111,15 @@
         .ov-collapsible-content { overflow: hidden; transition: max-height 0.3s ease-out; }
         .ov-collapsible-content.collapsed { max-height: 0 !important; }
 
-        .ov-char-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding-bottom: 5px; }
+        .ov-char-grid, .ov-build-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding-bottom: 5px; }
         .ov-char-card { padding: 12px !important; margin-bottom: 0 !important; }
         .ov-char-card .stats-row { display: none; } 
-        .ov-char-card .char-name { font-size: 0.95rem; }
+        .ov-char-card .char-name { font-size: 0.9rem; }
         .ov-char-card .char-talent { font-size: 0.75rem; padding: 6px; margin-top: 6px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
-        .ov-build-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding-bottom: 5px; }
-        .ov-build-card { padding: 10px 10px 10px 16px !important; margin-bottom: 0 !important; min-height: 44px; }
+        .ov-build-card { padding: 10px 10px 10px 16px !important; margin-bottom: 0 !important; min-height: 44px; flex-direction: row; }
         .ov-build-card .b-desc { display: none; } 
-        .ov-build-card .b-name { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ov-build-card .b-name { font-size: 0.85rem; }
 
         /* 底部選單 */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--bottom-nav-height); background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); border-top: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-around; align-items: center; z-index: 50; padding-bottom: 15px; }
@@ -146,8 +154,6 @@
         .btn-save-full { background: var(--primary-grad); color: white; }
         .btn-delete { background: #FFF0F0; color: var(--danger); width: 100%; margin-top: 15px; }
 
-        .btn-distribute { color: #443c3c; background: #F2F2F7; border: none; border-radius: 20px; padding: 6px 12px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; }
-
         .color-picker-wrapper { flex: 0 0 50px; text-align: center; }
         .circular-color-picker { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: relative; cursor: pointer; margin: 0 auto; }
         .circular-color-picker input[type="color"] { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; cursor: pointer; opacity: 0; }
@@ -167,7 +173,7 @@
     </div>
 
     <header>
-        <div class="app-title">江南知府 v17.0</div>
+        <div class="app-title">江南知府 v17.1</div>
         <nav class="city-scroll" id="cityTabs"></nav>
     </header>
 
@@ -256,7 +262,7 @@
     <div class="modal-overlay" id="dataModal"><div class="modal-box"><div class="modal-title">數據操作</div><textarea id="data-area" class="text-input" style="height:200px; font-size:0.8rem; font-family:monospace;"></textarea><div class="action-btns"><button class="btn btn-cancel" onclick="copyData()">複製</button><button class="btn btn-save-full" onclick="importData()">導入</button></div></div></div>
 
     <script>
-        // --- 核心資料庫 ---
+        // --- 核心資料庫 (數據保持不變) ---
         const charDB = {
             "沈周": { rank: "天", talent: "在[商業建築]工作時，立即完成[20%]進度，且[無需]工人。", stats: { build: 241, farm: 433, make: 608, money: 778, adv: 612 }, }, 
             "馮嫽": { rank: "侯", talent: "外出[探險]時，採集植物體力消耗[-12%]，且體力恢復速度加快[12%]。" }, 
