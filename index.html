@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>江南知府 v16.8</title>
+    <title>江南知府 v16.9</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
         /* --- 1. 核心變數 --- */
@@ -94,20 +94,23 @@
         .b-desc { font-size: 0.8rem; color: var(--text-sub); }
 
         /* --- 概況專用緊湊樣式 --- */
-        .overview-divider { margin: 25px 0 12px 0; font-size: 0.85rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+        .overview-divider { margin: 25px 0 12px 0; font-size: 0.85rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
         .ov-count-tag { font-size: 0.7rem; background: #E5E5EA; color: #8E8E93; padding: 2px 8px; border-radius: 10px; font-weight: normal; }
+        .ov-toggle-icon { font-size: 1.2rem; transition: transform 0.3s; color: var(--text-sub); margin-left: auto; }
+        .ov-divider-collapsed .ov-toggle-icon { transform: rotate(-90deg); }
         
-        /* 概況人物網格 (2欄) */
-        .ov-char-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .ov-collapsible-content { overflow: hidden; transition: max-height 0.3s ease-out; }
+        .ov-collapsible-content.collapsed { max-height: 0 !important; }
+
+        .ov-char-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding-bottom: 5px; }
         .ov-char-card { padding: 12px !important; margin-bottom: 0 !important; }
-        .ov-char-card .stats-row { display: none; } /* 概況隱藏數值 */
+        .ov-char-card .stats-row { display: none; } 
         .ov-char-card .char-name { font-size: 0.95rem; }
         .ov-char-card .char-talent { font-size: 0.75rem; padding: 6px; margin-top: 6px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
-        /* 概況建築網格 (2欄) */
-        .ov-build-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .ov-build-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding-bottom: 5px; }
         .ov-build-card { padding: 10px 10px 10px 16px !important; margin-bottom: 0 !important; min-height: 44px; }
-        .ov-build-card .b-desc { display: none; } /* 概況隱藏描述 */
+        .ov-build-card .b-desc { display: none; } 
         .ov-build-card .b-name { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         /* 底部導航 */
@@ -145,7 +148,6 @@
 
         .btn-distribute { color: #443c3c; background: #F2F2F7; border: none; border-radius: 20px; padding: 6px 12px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; }
 
-        /* 顏色選取器 */
         .color-picker-wrapper { flex: 0 0 50px; text-align: center; }
         .circular-color-picker { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: relative; cursor: pointer; margin: 0 auto; }
         .circular-color-picker input[type="color"] { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; cursor: pointer; opacity: 0; }
@@ -165,7 +167,7 @@
     </div>
 
     <header>
-        <div class="app-title">江南知府 v16.8</div>
+        <div class="app-title">江南知府 v16.9</div>
         <nav class="city-scroll" id="cityTabs"></nav>
     </header>
 
@@ -249,39 +251,13 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="buildingModal">
-        <div class="modal-box">
-            <div class="modal-title" id="buildModalTitle">原型設定</div>
-            <div class="field-row" style="display:flex; gap:12px; margin-bottom:15px; align-items:flex-end;">
-                <div class="edit-group" style="flex:1;">
-                    <label class="edit-label">名稱</label>
-                    <input type="text" id="in-b-name" class="text-input">
-                </div>
-                <div class="color-picker-wrapper">
-                    <label class="edit-label">顏色</label>
-                    <div class="circular-color-picker" id="color-circle">
-                        <input type="color" id="in-b-color" oninput="document.getElementById('color-circle').style.background=this.value">
-                    </div>
-                </div>
-            </div>
-            <div class="edit-group-v">
-                <label class="edit-label">備註</label>
-                <input type="text" id="in-b-desc" class="text-input">
-            </div>
-            <div class="action-btns">
-                <button class="btn btn-cancel" onclick="closeModal('buildingModal')">取消</button>
-                <button class="btn btn-save-full" onclick="saveMasterBuilding()">儲存</button>
-            </div>
-            <button id="btn-delete-build" class="btn btn-delete" onclick="askDeleteBuild()">連鎖刪除</button>
-        </div>
-    </div>
-
+    <!-- 其餘 Modal 省略以節省空間... 與前版本相同 -->
+    <div class="modal-overlay" id="buildingModal"><div class="modal-box"><div class="modal-title" id="buildModalTitle">原型設定</div><div class="field-row" style="display:flex; gap:12px; margin-bottom:15px; align-items:flex-end;"><div class="edit-group" style="flex:1;"><label class="edit-label">名稱</label><input type="text" id="in-b-name" class="text-input"></div><div class="color-picker-wrapper"><label class="edit-label">顏色</label><div class="circular-color-picker" id="color-circle"><input type="color" id="in-b-color" oninput="document.getElementById('color-circle').style.background=this.value"></div></div></div><div class="edit-group-v"><label class="edit-label">備註</label><input type="text" id="in-b-desc" class="text-input"></div><div class="action-btns"><button class="btn btn-cancel" onclick="closeModal('buildingModal')">取消</button><button class="btn btn-save-full" onclick="saveMasterBuilding()">儲存</button></div><button id="btn-delete-build" class="btn btn-delete" onclick="askDeleteBuild()">連鎖刪除</button></div></div>
     <div class="modal-overlay" id="distributeModal"><div class="modal-box"><div class="modal-title">分配至州府</div><div class="city-dispatch-grid" id="distCityGrid"></div><div class="action-btns"><button class="btn btn-cancel" onclick="closeModal('distributeModal')">取消</button><button class="btn btn-save-full" onclick="confirmDistribution()">確認分配</button></div></div></div>
-
     <div class="modal-overlay" id="dataModal"><div class="modal-box"><div class="modal-title">數據操作</div><textarea id="data-area" class="text-input" style="height:200px; font-size:0.8rem; font-family:monospace;"></textarea><div class="action-btns"><button class="btn btn-cancel" onclick="copyData()">複製</button><button class="btn btn-save-full" onclick="importData()">導入</button></div></div></div>
 
     <script>
-        // --- 人物資料庫 ---
+        // --- 人物資料庫 (與前版本相同) ---
         const charDB = {
             "沈周": { rank: "天", talent: "在[商業建築]工作時，立即完成[20%]進度，且[無需]工人。", stats: { build: 241, farm: 433, make: 608, money: 778, adv: 612 }, }, 
             "王如一": { rank: "侯", talent: "負責[滅火]工作時，立即完成[5%]進度。", stats: { build: 271, farm: 65, make: 301, money: 420, adv: 388 }, },
@@ -501,7 +477,44 @@
 
         function openAddCharModal() { editingCharId = null; tempDispatchCity = "未分配"; document.getElementById('charModalTitle').textContent = "新增人物"; document.getElementById('in-c-name').value = ''; document.getElementById('in-c-talent').value = ''; ['build','farm','make','money','adv'].forEach(k => document.getElementById(`in-c-${k}`).value = ''); document.getElementById('btn-delete-char').style.display = 'none'; renderModalCities(); document.getElementById('charModal').classList.add('open'); }
         function openEditCharModal(id) { editingCharId = id; const char = characters.find(c => c.id === id); tempDispatchCity = char.city; document.getElementById('charModalTitle').textContent = "編輯人物"; document.getElementById('in-c-name').value = char.name; document.getElementById('in-c-rank').value = char.rank; document.getElementById('in-c-talent').value = char.talent || ""; Object.keys(char.stats).forEach(k => document.getElementById(`in-c-${k}`).value = char.stats[k]); renderModalCities(); document.getElementById('btn-delete-char').style.display = 'block'; document.getElementById('charModal').classList.add('open'); }
-        function saveChar() { const name = document.getElementById('in-c-name').value; if(!name) return showToast("⚠️ 請輸入姓名"); const data = { name, rank: document.getElementById('in-c-rank').value, talent: document.getElementById('in-c-talent').value, city: tempDispatchCity, stats: { build: parseInt(document.getElementById('in-c-build').value)||0, farm: parseInt(document.getElementById('in-c-farm').value)||0, make: parseInt(document.getElementById('in-c-make').value)||0, money: parseInt(document.getElementById('in-c-money').value)||0, adv: parseInt(document.getElementById('in-c-adv').value)||0 } }; if(editingCharId) characters[characters.findIndex(c => c.id === editingCharId)] = { id: editingCharId, ...data }; else characters.push({ id: Date.now(), ...data }); saveData(); closeModal('charModal'); renderMainContent(); showToast("✅ 儲存成功"); }
+        
+        // --- 核心修改：防止重複人物 ---
+        function saveChar() {
+            const name = document.getElementById('in-c-name').value.trim();
+            if(!name) return showToast("⚠️ 請輸入姓名");
+
+            // 檢查重複：在 characters 數組中尋找是否有相同名字的人，且其 ID 不同於當前編輯的 ID
+            const isDuplicate = characters.some(c => c.name === name && c.id !== editingCharId);
+            if (isDuplicate) {
+                return showToast(`⚠️ 「${name}」已在名冊中，無法重複新增`);
+            }
+
+            const data = {
+                name,
+                rank: document.getElementById('in-c-rank').value,
+                talent: document.getElementById('in-c-talent').value,
+                city: tempDispatchCity,
+                stats: {
+                    build: parseInt(document.getElementById('in-c-build').value)||0,
+                    farm: parseInt(document.getElementById('in-c-farm').value)||0,
+                    make: parseInt(document.getElementById('in-c-make').value)||0,
+                    money: parseInt(document.getElementById('in-c-money').value)||0,
+                    adv: parseInt(document.getElementById('in-c-adv').value)||0
+                }
+            };
+
+            if(editingCharId) {
+                characters[characters.findIndex(c => c.id === editingCharId)] = { id: editingCharId, ...data };
+            } else {
+                characters.push({ id: Date.now(), ...data });
+            }
+
+            saveData();
+            closeModal('charModal');
+            renderMainContent();
+            showToast("✅ 儲存成功");
+        }
+
         function askDeleteChar() { showConfirmCard("刪除人物", "確定要刪除這位角色嗎？", () => { characters = characters.filter(c => c.id !== editingCharId); saveData(); closeModal('charModal'); renderMainContent(); showToast("🗑️ 已刪除"); }); }
 
         function renderModalCities() {
@@ -538,6 +551,13 @@
         function openDistributeModal(idx) { distTargetIdx = idx; selectedDistCities = []; const container = document.getElementById('distCityGrid'); container.innerHTML = ''; cities.slice(1).forEach(city => { const btn = document.createElement('button'); btn.className = 'dispatch-btn'; btn.textContent = city; btn.onclick = () => { if(selectedDistCities.includes(city)) selectedDistCities = selectedDistCities.filter(c => c !== city); else selectedDistCities.push(city); btn.classList.toggle('selected'); }; container.appendChild(btn); }); document.getElementById('distributeModal').classList.add('open'); }
         function confirmDistribution() { if(selectedDistCities.length === 0) return; const b = masterBuildings[distTargetIdx]; selectedDistCities.forEach(city => { if(!cityBuildings[city]) cityBuildings[city] = []; cityBuildings[city].push({...b}); }); saveData(); closeModal('distributeModal'); showToast(`🏗️ 分配完成`); }
 
+        // --- 概況瀏覽控制 (與前版本相同) ---
+        function toggleOvSection(sectionId, headerEl) {
+            const content = document.getElementById(sectionId);
+            const isCollapsed = content.classList.toggle('collapsed');
+            headerEl.classList.toggle('ov-divider-collapsed', isCollapsed);
+        }
+
         function renderOverview() {
             const container = document.getElementById('overview-content');
             const isUnassigned = (currentCity === "special_root");
@@ -545,18 +565,24 @@
             const bList = cityBuildings[currentCity] || [];
 
             let html = `
-                <div class="overview-divider">
+                <div class="overview-divider" onclick="toggleOvSection('ov-p-content', this)">
                     駐紮官員 <span class="ov-count-tag">${pList.length} 人</span>
+                    <span class="material-symbols-outlined ov-toggle-icon">expand_more</span>
                 </div>
-                <div class="ov-char-grid" id="ov-p"></div>
+                <div class="ov-collapsible-content" id="ov-p-content">
+                    <div class="ov-char-grid" id="ov-p"></div>
+                </div>
             `;
             
             if (!isUnassigned) {
                 html += `
-                    <div class="overview-divider">
+                    <div class="overview-divider" onclick="toggleOvSection('ov-b-content', this)">
                         城內建築 <span class="ov-count-tag">${bList.length} 座</span>
+                        <span class="material-symbols-outlined ov-toggle-icon">expand_more</span>
                     </div>
-                    <div class="ov-build-grid" id="ov-b"></div>
+                    <div class="ov-collapsible-content" id="ov-b-content">
+                        <div class="ov-build-grid" id="ov-b"></div>
+                    </div>
                 `;
             }
             container.innerHTML = html;
