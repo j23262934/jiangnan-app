@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>江南知府 v17.4</title>
+    <title>江南知府 v17.8</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
         /* --- 1. 核心變數 --- */
@@ -73,29 +73,17 @@
 
         /* --- 卡片樣式 (兩欄優化) --- */
         .card-base { background: var(--bg-card); border-radius: var(--radius-l); padding: 12px; box-shadow: var(--shadow); margin-bottom: 10px; transition: 0.2s; position: relative; overflow: hidden; cursor: pointer; }
-        
-        .char-grid, .building-list { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 10px; 
-        }
-
-        /* 標題列佈局：姓名左，階級右 */
+        .char-grid, .building-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
         .card-header-row { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 4px; }
         .char-name { font-size: 0.95rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
-
         .rank-tag { font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 20px; color: #fff; flex-shrink: 0; }
         .bg-天 { background: var(--rank-tian); } .bg-侯 { background: var(--rank-hou); } .bg-卿 { background: var(--rank-qing); } .bg-士 { background: var(--rank-shi); }
-        
         .char-talent { font-size: 0.75rem; color: var(--text-sub); line-height: 1.4; background: #F9F9FB; padding: 8px; border-radius: var(--radius-m); margin-top: 6px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
         .talent-hl { color: var(--primary); font-weight: 800; }
-
         .stats-row { display: flex; justify-content: space-between; margin-top: 8px; flex-wrap: wrap; gap: 2px; }
         .stat-box { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 25px; }
         .stat-label { font-size: 0.6rem; color: #B0B0B5; }
         .stat-val { font-size: 0.85rem; font-weight: 600; }
-        .stat-high { color: var(--primary); font-weight: 800; }
-        .stat-ultra { color: #FF9500; font-weight: 800; }
 
         /* --- 建築樣式 --- */
         .building-card { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 12px 10px 10px 16px; position: relative; }
@@ -104,27 +92,21 @@
         .b-name { font-weight: 700; font-size: 0.9rem; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .b-desc { font-size: 0.75rem; color: var(--text-sub); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .btn-distribute { width: 100%; margin-top: 4px; color: #443c3c; background: #F2F2F7; border: none; border-radius: 20px; padding: 5px 0; font-size: 0.75rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 2px; }
-        .b-count-tag { position: absolute; top: 6px; right: 8px; background: var(--primary); color: #fff; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,122,255,0.2); }
+        .b-count-tag { position: absolute; top: 6px; right: 8px; background: var(--primary); color: #fff; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 8px; }
 
-        /* --- 概況專用緊湊樣式 --- */
+        /* --- 概況專用樣式 --- */
         .overview-divider { margin: 25px 0 12px 0; font-size: 0.85rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
         .ov-count-tag { font-size: 0.7rem; background: #E5E5EA; color: #8E8E93; padding: 2px 8px; border-radius: 10px; font-weight: normal; }
         .ov-toggle-icon { font-size: 1.2rem; transition: transform 0.3s; color: var(--text-sub); margin-left: auto; }
         .ov-divider-collapsed .ov-toggle-icon { transform: rotate(-90deg); }
-        
         .ov-collapsible-content { overflow: hidden; transition: max-height 0.3s ease-out; }
         .ov-collapsible-content.collapsed { max-height: 0 !important; }
-
         .ov-char-grid, .ov-build-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding-bottom: 5px; }
-        .ov-char-card { padding: 12px !important; margin-bottom: 0 !important; }
         .ov-char-card .stats-row { display: none; } 
-        .ov-char-card .char-talent { font-size: 0.75rem; padding: 6px; margin-top: 6px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-
         .ov-build-card { padding: 10px 10px 10px 16px !important; margin-bottom: 0 !important; min-height: 44px; flex-direction: row; align-items: center; }
         .ov-build-card .b-desc { display: none; } 
-        .ov-build-card .b-name { font-size: 0.85rem; }
 
-        /* 底部導航 */
+        /* 底部選單 */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--bottom-nav-height); background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); border-top: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-around; align-items: center; z-index: 50; padding-bottom: 15px; }
         .nav-item { flex: 1; text-align: center; color: #C7C7CC; font-size: 0.75rem; cursor: pointer; }
         .nav-item.active { color: var(--text-main); }
@@ -136,30 +118,28 @@
         .modal-box { background: #fff; width: 95%; max-width: 500px; border-radius: var(--radius-xl); padding: 30px 24px; max-height: 85vh; overflow-y: auto; transform: translateY(100%); transition: 0.3s; }
         .modal-overlay.open .modal-box { transform: translateY(0); }
         .modal-title { font-size: 1.25rem; font-weight: 800; margin-bottom: 20px; text-align: center; }
-        
         .edit-group-v { margin-bottom: 20px; }
         .edit-label { font-size: 0.85rem; color: var(--text-sub); font-weight: 600; margin-bottom: 8px; display: block; }
         .text-input, .talent-input, .select-input { width: 100%; padding: 14px; border: none; background: var(--bg-input); border-radius: 12px; font-size: 1rem; color: var(--text-main); }
-        
-        .suggestion-container { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 1001; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #eee; }
-        .suggestion-item { padding: 14px 16px; border-bottom: 1px solid #f2f2f7; cursor: pointer; display: flex; justify-content: space-between; }
-        
         .stat-inputs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
         .stat-input-wrap input { width: 100%; text-align: center; padding: 12px 0; border: none; background: var(--bg-input); border-radius: 12px; font-weight: 700; }
-        
         .city-dispatch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .dispatch-btn { padding: 12px; border: none; background: var(--bg-input); border-radius: 12px; font-weight: 600; cursor: pointer; border: 2px solid transparent; }
         .dispatch-btn.selected { background: #EAF2FF; color: var(--primary); border-color: var(--primary); }
-
         .action-btns { margin-top: 25px; display: flex; gap: 12px; }
         .btn { flex: 1; padding: 14px; border: none; border-radius: 16px; font-weight: 700; cursor: pointer; }
         .btn-cancel { background: #F2F2F7; color: var(--text-sub); }
         .btn-save-full { background: var(--primary-grad); color: white; }
         .btn-delete { background: #FFF0F0; color: var(--danger); width: 100%; margin-top: 15px; }
 
-        .color-picker-wrapper { flex: 0 0 50px; text-align: center; }
-        .circular-color-picker { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: relative; cursor: pointer; margin: 0 auto; }
+        /* 顏色選取增強 */
+        .color-row { display: flex; align-items: center; gap: 8px; }
+        .circular-color-picker { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: relative; cursor: pointer; flex-shrink: 0; }
         .circular-color-picker input[type="color"] { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; cursor: pointer; opacity: 0; }
+        .color-hex-input { font-family: monospace; text-transform: uppercase; text-align: center; padding: 12px 8px !important; font-size: 0.9rem !important; flex: 1; }
+
+        .suggestion-container { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 1001; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #eee; }
+        .suggestion-item { padding: 14px 16px; border-bottom: 1px solid #f2f2f7; cursor: pointer; display: flex; justify-content: space-between; }
     </style>
 </head>
 <body>
@@ -176,7 +156,7 @@
     </div>
 
     <header>
-        <div class="app-title">江南知府 v17.4</div>
+        <div class="app-title">江南知府 v17.8</div>
         <nav class="city-scroll" id="cityTabs"></nav>
     </header>
 
@@ -198,6 +178,10 @@
                 <div class="subtitle" id="build-subtitle">建築倉庫</div>
                 <button id="addBuildBtn" class="btn-action" onclick="openAddBuildingModal()">＋ 新增原型</button>
             </div>
+            <div class="search-container">
+                <span class="material-symbols-outlined search-icon">search</span>
+                <input type="text" id="searchBuildInput" class="search-input-main" placeholder="搜尋建築名稱..." oninput="renderCityInfo()">
+            </div>
             <div id="buildingList" class="building-list"></div>
         </div>
 
@@ -214,7 +198,7 @@
         <div class="nav-item" onclick="switchTab('overview')"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg><div>概況</div></div>
     </nav>
 
-    <!-- Modals (保持原有邏輯) -->
+    <!-- Modals -->
     <div class="modal-overlay" id="charModal">
         <div class="modal-box">
             <div class="modal-title" id="charModalTitle">編輯人物</div>
@@ -257,7 +241,36 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="buildingModal"><div class="modal-box"><div class="modal-title" id="buildModalTitle">原型設定</div><div class="field-row" style="display:flex; gap:12px; margin-bottom:15px; align-items:flex-end;"><div class="edit-group" style="flex:1;"><label class="edit-label">名稱</label><input type="text" id="in-b-name" class="text-input"></div><div class="color-picker-wrapper"><label class="edit-label">顏色</label><div class="circular-color-picker" id="color-circle"><input type="color" id="in-b-color" oninput="document.getElementById('color-circle').style.background=this.value"></div></div></div><div class="edit-group-v"><label class="edit-label">備註</label><input type="text" id="in-b-desc" class="text-input"></div><div class="action-btns"><button class="btn btn-cancel" onclick="closeModal('buildingModal')">取消</button><button class="btn btn-save-full" onclick="saveMasterBuilding()">儲存</button></div><button id="btn-delete-build" class="btn btn-delete" onclick="askDeleteBuild()">連鎖刪除</button></div></div>
+    <div class="modal-overlay" id="buildingModal">
+        <div class="modal-box">
+            <div class="modal-title" id="buildModalTitle">原型設定</div>
+            <div style="display:flex; gap:12px; margin-bottom:15px; align-items:flex-end;">
+                <div class="edit-group" style="flex:1;">
+                    <label class="edit-label">名稱</label>
+                    <input type="text" id="in-b-name" class="text-input">
+                </div>
+                <div class="edit-group" style="flex:0 0 145px;">
+                    <label class="edit-label">顏色與色碼</label>
+                    <div class="color-row">
+                        <div class="circular-color-picker" id="color-circle">
+                            <input type="color" id="in-b-color" oninput="syncColorInput(this.value)">
+                        </div>
+                        <input type="text" id="in-b-hex" class="text-input color-hex-input" placeholder="#HEX" oninput="syncColorInput(this.value)">
+                    </div>
+                </div>
+            </div>
+            <div class="edit-group-v">
+                <label class="edit-label">備註</label>
+                <input type="text" id="in-b-desc" class="text-input">
+            </div>
+            <div class="action-btns">
+                <button class="btn btn-cancel" onclick="closeModal('buildingModal')">取消</button>
+                <button class="btn btn-save-full" onclick="saveMasterBuilding()">儲存</button>
+            </div>
+            <button id="btn-delete-build" class="btn btn-delete" onclick="askDeleteBuild()">連鎖刪除</button>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="distributeModal"><div class="modal-box"><div class="modal-title">分配至州府</div><div class="city-dispatch-grid" id="distCityGrid"></div><div class="action-btns"><button class="btn btn-cancel" onclick="closeModal('distributeModal')">取消</button><button class="btn btn-save-full" onclick="confirmDistribution()">確認分配</button></div></div></div>
     <div class="modal-overlay" id="dataModal"><div class="modal-box"><div class="modal-title">數據操作</div><textarea id="data-area" class="text-input" style="height:200px; font-size:0.8rem; font-family:monospace;"></textarea><div class="action-btns"><button class="btn btn-cancel" onclick="copyData()">複製</button><button class="btn btn-save-full" onclick="importData()">導入</button></div></div></div>
 
@@ -403,85 +416,24 @@
             "趙孟頫": { rank: "侯", talent: "負責[消耗紙或徽墨]的建造工作時，立即完成[20%]進度；與[管道昇]入住同城市，雙方負責工作時的屬性變為[1.1]倍。", stats: { build: 387, farm: 270, make: 224, money: 563, adv: 64 }, }, 
             "包拯": { rank: "天", talent: "負責[建造]時，花費的所有資源減少[10%]，但建造時間增加[10%]。且所需工人[-1]。", stats: { build: 789, farm: 606, make: 610, money: 436, adv: 420 }, }, 
         };
-    
+
         const cities = ["special_root", "應天", "蘇州", "杭州", "松江", "徽州", "紹興", "揚州", "雞鳴"];
         let characters = [], masterBuildings = [], cityBuildings = {};
         let currentCity = "special_root", currentTab = "people", editingCharId = null;
         let tempDispatchCity = "未分配", editingBuildIdx = null, distTargetIdx = null, selectedDistCities = [];
         let confirmCallback = null;
 
-        function showToast(msg) {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = 'toast'; toast.textContent = msg;
-            container.appendChild(toast);
-            setTimeout(() => toast.remove(), 2500);
-        }
-
-        function showConfirmCard(title, msg, callback) {
-            document.getElementById('confirm-title').textContent = title;
-            document.getElementById('confirm-msg').textContent = msg;
-            document.getElementById('confirm-overlay').classList.add('open');
-            document.getElementById('confirm-card').classList.add('open');
-            confirmCallback = callback;
-        }
-
-        function handleConfirm(result) {
-            document.getElementById('confirm-overlay').classList.remove('open');
-            document.getElementById('confirm-card').classList.remove('open');
-            if(result && confirmCallback) confirmCallback();
-            confirmCallback = null;
-        }
-
+        function showToast(msg) { const container = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = 'toast'; toast.textContent = msg; container.appendChild(toast); setTimeout(() => toast.remove(), 2500); }
+        function showConfirmCard(title, msg, callback) { document.getElementById('confirm-title').textContent = title; document.getElementById('confirm-msg').textContent = msg; document.getElementById('confirm-overlay').classList.add('open'); document.getElementById('confirm-card').classList.add('open'); confirmCallback = callback; }
+        function handleConfirm(result) { document.getElementById('confirm-overlay').classList.remove('open'); document.getElementById('confirm-card').classList.remove('open'); if(result && confirmCallback) confirmCallback(); confirmCallback = null; }
         function init() { loadData(); renderCityTabs(); renderMainContent(); setupOverlayClick(); window.addEventListener('click', (e) => { const box = document.getElementById('suggestionBox'); if (e.target.id !== 'in-c-name' && e.target.id !== 'suggestionBox') box.style.display = 'none'; }); }
-
-        function loadData() {
-            characters = JSON.parse(localStorage.getItem('jiangnan_chars_v16') || '[]');
-            masterBuildings = JSON.parse(localStorage.getItem('jiangnan_master_v16') || '[]');
-            cityBuildings = JSON.parse(localStorage.getItem('jiangnan_cityb_v16') || '{}');
-            cities.forEach(c => { if(c !== "special_root" && !cityBuildings[c]) cityBuildings[c] = []; });
-        }
-
-        function saveData() {
-            localStorage.setItem('jiangnan_chars_v16', JSON.stringify(characters));
-            localStorage.setItem('jiangnan_master_v16', JSON.stringify(masterBuildings));
-            localStorage.setItem('jiangnan_cityb_v16', JSON.stringify(cityBuildings));
-        }
-
+        function loadData() { characters = JSON.parse(localStorage.getItem('jiangnan_chars_v16') || '[]'); masterBuildings = JSON.parse(localStorage.getItem('jiangnan_master_v16') || '[]'); cityBuildings = JSON.parse(localStorage.getItem('jiangnan_cityb_v16') || '{}'); cities.forEach(c => { if(c !== "special_root" && !cityBuildings[c]) cityBuildings[c] = []; }); }
+        function saveData() { localStorage.setItem('jiangnan_chars_v16', JSON.stringify(characters)); localStorage.setItem('jiangnan_master_v16', JSON.stringify(masterBuildings)); localStorage.setItem('jiangnan_cityb_v16', JSON.stringify(cityBuildings)); }
         function setupOverlayClick() { document.querySelectorAll('.modal-overlay').forEach(overlay => { overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(overlay.id); }); }); }
+        function switchTab(tab) { currentTab = tab; document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); const idx = { 'people': 0, 'city': 1, 'overview': 2 }[tab]; document.querySelectorAll('.nav-item')[idx].classList.add('active'); document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active')); document.getElementById(`view-${tab}`).classList.add('active'); if(tab === 'overview' && currentCity === 'special_root') currentCity = "應天"; if(tab === 'city') currentCity = "special_root"; renderCityTabs(); renderMainContent(); }
 
-        function switchTab(tab) {
-            currentTab = tab;
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            const idx = { 'people': 0, 'city': 1, 'overview': 2 }[tab];
-            document.querySelectorAll('.nav-item')[idx].classList.add('active');
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.getElementById(`view-${tab}`).classList.add('active');
-            if(tab === 'overview' && currentCity === 'special_root') currentCity = "應天";
-            if(tab === 'city') currentCity = "special_root";
-            renderCityTabs(); renderMainContent();
-        }
-
-        function renderCityTabs() {
-            const container = document.getElementById('cityTabs'); container.innerHTML = '';
-            const list = (currentTab === 'overview') ? cities.slice(1) : cities;
-            list.forEach(city => {
-                const btn = document.createElement('div');
-                let name = city;
-                if(city === "special_root") {
-                    if(currentTab === 'people') name = "未分類";
-                    else if(currentTab === 'city') name = "倉庫";
-                    else name = "未分類";
-                }
-                btn.className = `city-tab ${city === "special_root" ? 'special-tab' : ''} ${city === currentCity ? 'active' : ''}`;
-                btn.textContent = name;
-                btn.onclick = () => { currentCity = city; renderCityTabs(); renderMainContent(); };
-                container.appendChild(btn);
-            });
-        }
-
+        function renderCityTabs() { const container = document.getElementById('cityTabs'); container.innerHTML = ''; const list = (currentTab === 'overview') ? cities.slice(1) : cities; list.forEach(city => { const btn = document.createElement('div'); let name = city; if(city === "special_root") { if(currentTab === 'people') name = "未分類"; else if(currentTab === 'city') name = "倉庫"; else name = "未分類"; } btn.className = `city-tab ${city === "special_root" ? 'special-tab' : ''} ${city === currentCity ? 'active' : ''}`; btn.textContent = name; btn.onclick = () => { currentCity = city; renderCityTabs(); renderMainContent(); }; container.appendChild(btn); }); }
         function renderMainContent() { if(currentTab === 'people') renderPeople(); else if(currentTab === 'city') renderCityInfo(); else renderOverview(); }
-
         function parseTalent(text) { return text ? text.replace(/\[(.*?)\]/g, '<span class="talent-hl">$1</span>') : "目前無特殊能力設定"; }
 
         function renderPeople() {
@@ -498,83 +450,81 @@
             });
         }
 
-        function handleNameInput() {
-            const val = document.getElementById('in-c-name').value.trim();
-            const box = document.getElementById('suggestionBox'); box.innerHTML = '';
-            if(!val) { box.style.display = 'none'; return; }
-            const matches = Object.keys(charDB).filter(n => n.includes(val));
-            matches.forEach(m => {
-                const item = document.createElement('div'); item.className = 'suggestion-item';
-                item.innerHTML = `<span>${m}</span><span style="font-size:0.75rem; color:#8e8e93;">${charDB[m].rank}</span>`;
-                item.onclick = () => {
-                    const d = charDB[m]; document.getElementById('in-c-name').value = m;
-                    document.getElementById('in-c-rank').value = d.rank; document.getElementById('in-c-talent').value = d.talent || "";
-                    if(d.stats) Object.keys(d.stats).forEach(k => document.getElementById(`in-c-${k}`).value = d.stats[k]);
-                    box.style.display = 'none';
-                };
-                box.appendChild(item);
-            });
-            box.style.display = matches.length > 0 ? 'block' : 'none';
-        }
-
+        function handleNameInput() { const val = document.getElementById('in-c-name').value.trim(); const box = document.getElementById('suggestionBox'); box.innerHTML = ''; if(!val) { box.style.display = 'none'; return; } const matches = Object.keys(charDB).filter(n => n.includes(val)); matches.forEach(m => { const item = document.createElement('div'); item.className = 'suggestion-item'; item.innerHTML = `<span>${m}</span><span style="font-size:0.75rem; color:#8e8e93;">${charDB[m].rank}</span>`; item.onclick = () => { const d = charDB[m]; document.getElementById('in-c-name').value = m; document.getElementById('in-c-rank').value = d.rank; document.getElementById('in-c-talent').value = d.talent || ""; if(d.stats) Object.keys(d.stats).forEach(k => document.getElementById(`in-c-${k}`).value = d.stats[k]); box.style.display = 'none'; }; box.appendChild(item); }); box.style.display = matches.length > 0 ? 'block' : 'none'; }
         function openAddCharModal() { editingCharId = null; tempDispatchCity = "未分配"; document.getElementById('charModalTitle').textContent = "新增人物"; document.getElementById('in-c-name').value = ''; document.getElementById('in-c-talent').value = ''; ['build','farm','make','money','adv'].forEach(k => document.getElementById(`in-c-${k}`).value = ''); document.getElementById('btn-delete-char').style.display = 'none'; renderModalCities(); document.getElementById('charModal').classList.add('open'); }
         function openEditCharModal(id) { editingCharId = id; const char = characters.find(c => c.id === id); tempDispatchCity = char.city; document.getElementById('charModalTitle').textContent = "編輯人物"; document.getElementById('in-c-name').value = char.name; document.getElementById('in-c-rank').value = char.rank; document.getElementById('in-c-talent').value = char.talent || ""; Object.keys(char.stats).forEach(k => document.getElementById(`in-c-${k}`).value = char.stats[k]); renderModalCities(); document.getElementById('btn-delete-char').style.display = 'block'; document.getElementById('charModal').classList.add('open'); }
         function saveChar() { const name = document.getElementById('in-c-name').value.trim(); if(!name) return showToast("⚠️ 請輸入姓名"); const isDuplicate = characters.some(c => c.name === name && c.id !== editingCharId); if (isDuplicate) return showToast(`⚠️ 「${name}」已在名冊中`); const data = { name, rank: document.getElementById('in-c-rank').value, talent: document.getElementById('in-c-talent').value, city: tempDispatchCity, stats: { build: parseInt(document.getElementById('in-c-build').value)||0, farm: parseInt(document.getElementById('in-c-farm').value)||0, make: parseInt(document.getElementById('in-c-make').value)||0, money: parseInt(document.getElementById('in-c-money').value)||0, adv: parseInt(document.getElementById('in-c-adv').value)||0 } }; if(editingCharId) characters[characters.findIndex(c => c.id === editingCharId)] = { id: editingCharId, ...data }; else characters.push({ id: Date.now(), ...data }); saveData(); closeModal('charModal'); renderMainContent(); showToast("✅ 儲存成功"); }
         function askDeleteChar() { showConfirmCard("刪除人物", "確定要刪除這位角色嗎？", () => { characters = characters.filter(c => c.id !== editingCharId); saveData(); closeModal('charModal'); renderMainContent(); showToast("🗑️ 已刪除"); }); }
         function renderModalCities() { const container = document.getElementById('modalCityGrid'); container.innerHTML = ''; ["未分配", ...cities.slice(1)].forEach(c => { const btn = document.createElement('button'); btn.className = `dispatch-btn ${c === tempDispatchCity ? 'selected' : ''}`; btn.textContent = c; btn.onclick = () => { tempDispatchCity = c; renderModalCities(); }; container.appendChild(btn); }); }
 
-        function getGroupedBuildings(list) {
-            const groups = {};
-            list.forEach(b => {
-                if (!groups[b.name]) groups[b.name] = { ...b, count: 1 };
-                else groups[b.name].count++;
-            });
-            return Object.values(groups);
-        }
-
-        function askDeleteCityBuildingByName(city, name) {
-            showConfirmCard("拆除建築", `確定要拆除 ${city} 的其中一座「${name}」嗎？`, () => {
-                const idx = cityBuildings[city].findIndex(b => b.name === name);
-                if (idx > -1) {
-                    cityBuildings[city].splice(idx, 1);
-                    saveData();
-                    renderMainContent();
-                    showToast("🗑️ 已拆除一座");
-                }
-            });
-        }
+        function getGroupedBuildings(list) { const groups = {}; list.forEach(b => { if (!groups[b.name]) groups[b.name] = { ...b, count: 1 }; else groups[b.name].count++; }); return Object.values(groups); }
+        function askDeleteCityBuildingByName(city, name) { showConfirmCard("拆除建築", `確定要拆除 ${city} 的其中一座「${name}」嗎？`, () => { const idx = cityBuildings[city].findIndex(b => b.name === name); if (idx > -1) { cityBuildings[city].splice(idx, 1); saveData(); renderMainContent(); showToast("🗑️ 已拆除一座"); } }); }
 
         function renderCityInfo() {
             const isWarehouse = (currentCity === "special_root");
+            const search = document.getElementById('searchBuildInput').value.trim();
             document.getElementById('addBuildBtn').style.display = isWarehouse ? 'block' : 'none';
             document.getElementById('build-subtitle').textContent = isWarehouse ? "建築倉庫" : `${currentCity} 建築清單`;
             const container = document.getElementById('buildingList'); container.innerHTML = '';
             if (isWarehouse) {
-                masterBuildings.forEach((b, idx) => {
-                    const card = document.createElement('div'); card.className = `card-base building-card`;
-                    card.onclick = () => openEditBuildingModal(idx);
-                    card.innerHTML = `<div class="b-color-strip" style="background:${b.color||'#ddd'}"></div><div class="b-info"><span class="b-name">${b.name}</span><span class="b-desc">${b.desc}</span></div><button class="btn-distribute" onclick="event.stopPropagation(); openDistributeModal(${idx})"><span class="material-symbols-outlined">add_location_alt</span>分配</button>`;
-                    container.appendChild(card);
-                });
+                let filtered = search ? masterBuildings.filter(b => b.name.includes(search)) : masterBuildings;
+                filtered.forEach((b) => { const originalIdx = masterBuildings.indexOf(b); const card = document.createElement('div'); card.className = `card-base building-card`; card.onclick = () => openEditBuildingModal(originalIdx); card.innerHTML = `<div class="b-color-strip" style="background:${b.color||'#ddd'}"></div><div class="b-info"><span class="b-name">${b.name}</span><span class="b-desc">${b.desc}</span></div><button class="btn-distribute" onclick="event.stopPropagation(); openDistributeModal(masterBuildings.indexOf(b))"><span class="material-symbols-outlined">add_location_alt</span>分配</button>`; container.appendChild(card); });
             } else {
-                const grouped = getGroupedBuildings(cityBuildings[currentCity] || []);
-                grouped.forEach(b => {
-                    const card = document.createElement('div'); card.className = `card-base building-card`;
-                    card.onclick = () => askDeleteCityBuildingByName(currentCity, b.name);
-                    card.innerHTML = `<div class="b-color-strip" style="background:${b.color||'#ddd'}"></div><div class="b-info"><span class="b-name">${b.name}</span><span class="b-desc">${b.desc}</span></div>${b.count > 1 ? `<div class="b-count-tag">x${b.count}</div>` : ''}`;
-                    container.appendChild(card);
-                });
+                let cityList = cityBuildings[currentCity] || [];
+                let filtered = search ? cityList.filter(b => b.name.includes(search)) : cityList;
+                const grouped = getGroupedBuildings(filtered);
+                grouped.forEach(b => { const card = document.createElement('div'); card.className = `card-base building-card`; card.onclick = () => askDeleteCityBuildingByName(currentCity, b.name); card.innerHTML = `<div class="b-color-strip" style="background:${b.color||'#ddd'}"></div><div class="b-info"><span class="b-name">${b.name}</span><span class="b-desc">${b.desc}</span></div>${b.count > 1 ? `<div class="b-count-tag">x${b.count}</div>` : ''}`; container.appendChild(card); });
             }
         }
 
-        function openAddBuildingModal() { editingBuildIdx = null; document.getElementById('in-b-name').value = ""; document.getElementById('in-b-desc').value = ""; document.getElementById('in-b-color').value = "#5dabff"; document.getElementById('color-circle').style.background = "#5dabff"; document.getElementById('btn-delete-build').style.display = 'none'; document.getElementById('buildingModal').classList.add('open'); }
-        function openEditBuildingModal(idx) { editingBuildIdx = idx; const b = masterBuildings[idx]; document.getElementById('in-b-name').value = b.name; document.getElementById('in-b-desc').value = b.desc; document.getElementById('in-b-color').value = b.color; document.getElementById('color-circle').style.background = b.color; document.getElementById('btn-delete-build').style.display = 'block'; document.getElementById('buildingModal').classList.add('open'); }
-        function saveMasterBuilding() { const name = document.getElementById('in-b-name').value; if(!name) return; const bData = { name, color: document.getElementById('in-b-color').value, desc: document.getElementById('in-b-desc').value }; if(editingBuildIdx !== null) masterBuildings[editingBuildIdx] = bData; else masterBuildings.push(bData); saveData(); closeModal('buildingModal'); renderCityInfo(); }
-        function askDeleteBuild() { showConfirmCard("連鎖刪除", "確定要刪除倉庫原型嗎？各城市的同名建築將一併被拆除！", () => { const targetName = masterBuildings[editingBuildIdx].name; masterBuildings.splice(editingBuildIdx, 1); for (let c in cityBuildings) { cityBuildings[c] = cityBuildings[c].filter(b => b.name !== targetName); } saveData(); closeModal('buildingModal'); renderCityInfo(); showToast("🗑️ 已連鎖清除"); }); }
+        // --- 核心更新：顏色與色碼雙向同步 ---
+        function syncColorInput(val) {
+            const circle = document.getElementById('color-circle');
+            const picker = document.getElementById('in-b-color');
+            const hexInput = document.getElementById('in-b-hex');
+            
+            let finalVal = val;
+            // 如果輸入不含 #，且長度正確，自動補上
+            if (!val.startsWith('#') && (val.length === 6 || val.length === 3)) {
+                finalVal = '#' + val;
+            }
 
+            // 更新圓圈視覺與 picker
+            if (/^#[0-9A-F]{6}$/i.test(finalVal) || /^#[0-9A-F]{3}$/i.test(finalVal)) {
+                circle.style.background = finalVal;
+                picker.value = (finalVal.length === 4) ? expandHex(finalVal) : finalVal; 
+                hexInput.value = finalVal.toUpperCase();
+            } else {
+                // 如果是 picker 直接傳入的完整色碼
+                circle.style.background = val;
+                hexInput.value = val.toUpperCase();
+            }
+        }
+
+        function expandHex(hex) {
+            return '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
+        }
+
+        function openAddBuildingModal() { editingBuildIdx = null; document.getElementById('in-b-name').value = ""; document.getElementById('in-b-desc').value = ""; document.getElementById('in-b-color').value = "#5dabff"; syncColorInput("#5dabff"); document.getElementById('btn-delete-build').style.display = 'none'; document.getElementById('buildingModal').classList.add('open'); }
+        function openEditBuildingModal(idx) { editingBuildIdx = idx; const b = masterBuildings[idx]; document.getElementById('in-b-name').value = b.name; document.getElementById('in-b-desc').value = b.desc; document.getElementById('in-b-color').value = b.color; syncColorInput(b.color); document.getElementById('btn-delete-build').style.display = 'block'; document.getElementById('buildingModal').classList.add('open'); }
+        
+        function saveMasterBuilding() { 
+            const name = document.getElementById('in-b-name').value.trim(); 
+            if(!name) return showToast("⚠️ 請輸入名稱"); 
+            const color = document.getElementById('in-b-color').value;
+            const desc = document.getElementById('in-b-desc').value;
+            const bData = { name, color, desc }; 
+            if(editingBuildIdx !== null) {
+                const oldName = masterBuildings[editingBuildIdx].name; masterBuildings[editingBuildIdx] = bData;
+                for (let city in cityBuildings) { cityBuildings[city].forEach(cb => { if (cb.name === oldName) { cb.name = bData.name; cb.color = bData.color; cb.desc = bData.desc; } }); }
+                showToast("✅ 已同步全城外觀");
+            } else { masterBuildings.push(bData); showToast("✅ 已新增建築原型"); } 
+            saveData(); closeModal('buildingModal'); renderMainContent(); 
+        }
+
+        function askDeleteBuild() { showConfirmCard("連鎖刪除", "確定要刪除倉庫原型嗎？各城市的同名建築將一併被拆除！", () => { const targetName = masterBuildings[editingBuildIdx].name; masterBuildings.splice(editingBuildIdx, 1); for (let c in cityBuildings) { cityBuildings[c] = cityBuildings[c].filter(b => b.name !== targetName); } saveData(); closeModal('buildingModal'); renderMainContent(); showToast("🗑️ 已連鎖清除"); }); }
         function openDistributeModal(idx) { distTargetIdx = idx; selectedDistCities = []; const container = document.getElementById('distCityGrid'); container.innerHTML = ''; cities.slice(1).forEach(city => { const btn = document.createElement('button'); btn.className = 'dispatch-btn'; btn.textContent = city; btn.onclick = () => { if(selectedDistCities.includes(city)) selectedDistCities = selectedDistCities.filter(c => c !== city); else selectedDistCities.push(city); btn.classList.toggle('selected'); }; container.appendChild(btn); }); document.getElementById('distributeModal').classList.add('open'); }
         function confirmDistribution() { if(selectedDistCities.length === 0) return; const b = masterBuildings[distTargetIdx]; selectedDistCities.forEach(city => { if(!cityBuildings[city]) cityBuildings[city] = []; cityBuildings[city].push({...b}); }); saveData(); closeModal('distributeModal'); showToast(`🏗️ 分配完成`); }
-
         function toggleOvSection(sectionId, headerEl) { const content = document.getElementById(sectionId); const isCollapsed = content.classList.toggle('collapsed'); headerEl.classList.toggle('ov-divider-collapsed', isCollapsed); }
 
         function renderOverview() {
@@ -596,7 +546,6 @@
                 `;
             }
             container.innerHTML = html;
-
             pList.forEach(char => {
                 const card = document.createElement('div'); card.className = 'card-base char-card ov-char-card'; card.onclick = () => openEditCharModal(char.id);
                 card.innerHTML = `<div class="card-header-row"><span class="char-name">${char.name}</span><span class="rank-tag bg-${char.rank}">${char.rank}</span></div><div class="char-talent">${parseTalent(char.talent)}</div>`;
