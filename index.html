@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>江南知府 v17.7</title>
+    <title>江南知府 v17.9</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
         /* --- 1. 核心變數 --- */
@@ -71,7 +71,7 @@
         .view-section.active { display: block; }
         @keyframes fadeIn { to { opacity: 1; } }
 
-        /* --- 卡片樣式 (兩欄優化) --- */
+        /* --- 卡片樣式 --- */
         .card-base { background: var(--bg-card); border-radius: var(--radius-l); padding: 12px; box-shadow: var(--shadow); margin-bottom: 10px; transition: 0.2s; position: relative; overflow: hidden; cursor: pointer; }
         .char-grid, .building-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
         .card-header-row { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 4px; }
@@ -94,7 +94,7 @@
         .btn-distribute { width: 100%; margin-top: 4px; color: #443c3c; background: #F2F2F7; border: none; border-radius: 20px; padding: 5px 0; font-size: 0.75rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 2px; }
         .b-count-tag { position: absolute; top: 6px; right: 8px; background: var(--primary); color: #fff; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 8px; }
 
-        /* --- 概況專用樣式 --- */
+        /* --- 概況樣式 --- */
         .overview-divider { margin: 25px 0 12px 0; font-size: 0.85rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
         .ov-count-tag { font-size: 0.7rem; background: #E5E5EA; color: #8E8E93; padding: 2px 8px; border-radius: 10px; font-weight: normal; }
         .ov-toggle-icon { font-size: 1.2rem; transition: transform 0.3s; color: var(--text-sub); margin-left: auto; }
@@ -136,7 +136,7 @@
         .color-row { display: flex; align-items: center; gap: 8px; }
         .circular-color-picker { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: relative; cursor: pointer; flex-shrink: 0; }
         .circular-color-picker input[type="color"] { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; cursor: pointer; opacity: 0; }
-        .color-hex-input { font-family: monospace; text-transform: uppercase; text-align: center; padding: 12px 8px !important; font-size: 0.9rem !important; }
+        .color-hex-input { font-family: monospace; text-transform: uppercase; text-align: center; padding: 12px 8px !important; font-size: 0.9rem !important; flex: 1; }
 
         .suggestion-container { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 1001; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #eee; }
         .suggestion-item { padding: 14px 16px; border-bottom: 1px solid #f2f2f7; cursor: pointer; display: flex; justify-content: space-between; }
@@ -156,12 +156,11 @@
     </div>
 
     <header>
-        <div class="app-title">江南知府 v17.7</div>
+        <div class="app-title">江南知府 v17.9</div>
         <nav class="city-scroll" id="cityTabs"></nav>
     </header>
 
     <main>
-        <!-- View 1: 人物 -->
         <div id="view-people" class="view-section active">
             <div class="section-header">
                 <div class="subtitle">人員</div>
@@ -174,7 +173,6 @@
             <div id="charList" class="char-grid"></div>
         </div>
 
-        <!-- View 2: 建築 -->
         <div id="view-city" class="view-section">
             <div class="section-header">
                 <div class="subtitle" id="build-subtitle">建築倉庫</div>
@@ -187,7 +185,6 @@
             <div id="buildingList" class="building-list"></div>
         </div>
 
-        <!-- View 3: 概況 -->
         <div id="view-overview" class="view-section">
             <div class="section-header"><div class="subtitle">州府總覽</div></div>
             <div id="overview-content"></div>
@@ -247,14 +244,13 @@
     <div class="modal-overlay" id="buildingModal">
         <div class="modal-box">
             <div class="modal-title" id="buildModalTitle">原型設定</div>
-            <!-- 修改點：名稱與顏色在同一行 -->
             <div style="display:flex; gap:12px; margin-bottom:15px; align-items:flex-end;">
                 <div class="edit-group" style="flex:1;">
                     <label class="edit-label">名稱</label>
                     <input type="text" id="in-b-name" class="text-input">
                 </div>
-                <div class="edit-group" style="flex:0 0 140px;">
-                    <label class="edit-label">顏色</label>
+                <div class="edit-group" style="flex:0 0 145px;">
+                    <label class="edit-label">顏色與色碼</label>
                     <div class="color-row">
                         <div class="circular-color-picker" id="color-circle">
                             <input type="color" id="in-b-color" oninput="syncColorInput(this.value)">
@@ -420,7 +416,7 @@
             "趙孟頫": { rank: "侯", talent: "負責[消耗紙或徽墨]的建造工作時，立即完成[20%]進度；與[管道昇]入住同城市，雙方負責工作時的屬性變為[1.1]倍。", stats: { build: 387, farm: 270, make: 224, money: 563, adv: 64 }, }, 
             "包拯": { rank: "天", talent: "負責[建造]時，花費的所有資源減少[10%]，但建造時間增加[10%]。且所需工人[-1]。", stats: { build: 789, farm: 606, make: 610, money: 436, adv: 420 }, }, 
         };
-
+        
         const cities = ["special_root", "應天", "蘇州", "杭州", "松江", "徽州", "紹興", "揚州", "雞鳴"];
         let characters = [], masterBuildings = [], cityBuildings = {};
         let currentCity = "special_root", currentTab = "people", editingCharId = null;
@@ -472,12 +468,28 @@
             const container = document.getElementById('buildingList'); container.innerHTML = '';
             if (isWarehouse) {
                 let filtered = search ? masterBuildings.filter(b => b.name.includes(search)) : masterBuildings;
-                filtered.forEach((b) => { const originalIdx = masterBuildings.indexOf(b); const card = document.createElement('div'); card.className = `card-base building-card`; card.onclick = () => openEditBuildingModal(originalIdx); card.innerHTML = `<div class="b-color-strip" style="background:${b.color||'#ddd'}"></div><div class="b-info"><span class="b-name">${b.name}</span><span class="b-desc">${b.desc}</span></div><button class="btn-distribute" onclick="event.stopPropagation(); openDistributeModal(masterBuildings.indexOf(b))"><span class="material-symbols-outlined">add_location_alt</span>分配</button>`; container.appendChild(card); });
+                filtered.forEach((b) => { 
+                    const originalIdx = masterBuildings.indexOf(b); 
+                    const card = document.createElement('div'); card.className = `card-base building-card`;
+                    card.onclick = () => openEditBuildingModal(originalIdx);
+                    card.innerHTML = `
+                        <div class="b-color-strip" style="background:${b.color||'#ddd'}"></div>
+                        <div class="b-info"><span class="b-name">${b.name}</span><span class="b-desc">${b.desc}</span></div>
+                        <button class="btn-distribute" onclick="event.stopPropagation(); openDistributeModal(${originalIdx})">
+                            <span class="material-symbols-outlined">add_location_alt</span>分配
+                        </button>`; 
+                    container.appendChild(card); 
+                });
             } else {
                 let cityList = cityBuildings[currentCity] || [];
                 let filtered = search ? cityList.filter(b => b.name.includes(search)) : cityList;
                 const grouped = getGroupedBuildings(filtered);
-                grouped.forEach(b => { const card = document.createElement('div'); card.className = `card-base building-card`; card.onclick = () => askDeleteCityBuildingByName(currentCity, b.name); card.innerHTML = `<div class="b-color-strip" style="background:${b.color||'#ddd'}"></div><div class="b-info"><span class="b-name">${b.name}</span><span class="b-desc">${b.desc}</span></div>${b.count > 1 ? `<div class="b-count-tag">x${b.count}</div>` : ''}`; container.appendChild(card); });
+                grouped.forEach(b => { 
+                    const card = document.createElement('div'); card.className = `card-base building-card`; 
+                    card.onclick = () => askDeleteCityBuildingByName(currentCity, b.name); 
+                    card.innerHTML = `<div class="b-color-strip" style="background:${b.color||'#ddd'}"></div><div class="b-info"><span class="b-name">${b.name}</span><span class="b-desc">${b.desc}</span></div>${b.count > 1 ? `<div class="b-count-tag">x${b.count}</div>` : ''}`; 
+                    container.appendChild(card); 
+                });
             }
         }
 
@@ -485,10 +497,15 @@
             const circle = document.getElementById('color-circle');
             const picker = document.getElementById('in-b-color');
             const hexInput = document.getElementById('in-b-hex');
-            if (val.startsWith('#') && (val.length === 7 || val.length === 4)) { circle.style.background = val; picker.value = val; hexInput.value = val.toUpperCase(); } 
-            else if (!val.startsWith('#') && (val.length === 6 || val.length === 3)) { const hexVal = '#' + val; circle.style.background = hexVal; picker.value = hexVal; hexInput.value = hexVal.toUpperCase(); } 
-            else { circle.style.background = val; hexInput.value = val.toUpperCase(); }
+            let finalVal = val;
+            if (!val.startsWith('#') && (val.length === 6 || val.length === 3)) finalVal = '#' + val;
+            if (/^#[0-9A-F]{6}$/i.test(finalVal) || /^#[0-9A-F]{3}$/i.test(finalVal)) {
+                circle.style.background = finalVal;
+                picker.value = (finalVal.length === 4) ? expandHex(finalVal) : finalVal; 
+                hexInput.value = finalVal.toUpperCase();
+            } else { circle.style.background = val; hexInput.value = val.toUpperCase(); }
         }
+        function expandHex(hex) { return '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3]; }
 
         function openAddBuildingModal() { editingBuildIdx = null; document.getElementById('in-b-name').value = ""; document.getElementById('in-b-desc').value = ""; document.getElementById('in-b-color').value = "#5dabff"; syncColorInput("#5dabff"); document.getElementById('btn-delete-build').style.display = 'none'; document.getElementById('buildingModal').classList.add('open'); }
         function openEditBuildingModal(idx) { editingBuildIdx = idx; const b = masterBuildings[idx]; document.getElementById('in-b-name').value = b.name; document.getElementById('in-b-desc').value = b.desc; document.getElementById('in-b-color').value = b.color; syncColorInput(b.color); document.getElementById('btn-delete-build').style.display = 'block'; document.getElementById('buildingModal').classList.add('open'); }
@@ -502,14 +519,23 @@
             if(editingBuildIdx !== null) {
                 const oldName = masterBuildings[editingBuildIdx].name; masterBuildings[editingBuildIdx] = bData;
                 for (let city in cityBuildings) { cityBuildings[city].forEach(cb => { if (cb.name === oldName) { cb.name = bData.name; cb.color = bData.color; cb.desc = bData.desc; } }); }
-                showToast("✅ 已同步全城");
-            } else { masterBuildings.push(bData); showToast("✅ 已新增"); } 
+                showToast("✅ 已同步全城外觀");
+            } else { masterBuildings.push(bData); showToast("✅ 已新增建築原型"); } 
             saveData(); closeModal('buildingModal'); renderMainContent(); 
         }
 
         function askDeleteBuild() { showConfirmCard("連鎖刪除", "確定要刪除倉庫原型嗎？各城市的同名建築將一併被拆除！", () => { const targetName = masterBuildings[editingBuildIdx].name; masterBuildings.splice(editingBuildIdx, 1); for (let c in cityBuildings) { cityBuildings[c] = cityBuildings[c].filter(b => b.name !== targetName); } saveData(); closeModal('buildingModal'); renderMainContent(); showToast("🗑️ 已連鎖清除"); }); }
         function openDistributeModal(idx) { distTargetIdx = idx; selectedDistCities = []; const container = document.getElementById('distCityGrid'); container.innerHTML = ''; cities.slice(1).forEach(city => { const btn = document.createElement('button'); btn.className = 'dispatch-btn'; btn.textContent = city; btn.onclick = () => { if(selectedDistCities.includes(city)) selectedDistCities = selectedDistCities.filter(c => c !== city); else selectedDistCities.push(city); btn.classList.toggle('selected'); }; container.appendChild(btn); }); document.getElementById('distributeModal').classList.add('open'); }
-        function confirmDistribution() { if(selectedDistCities.length === 0) return; const b = masterBuildings[distTargetIdx]; selectedDistCities.forEach(city => { if(!cityBuildings[city]) cityBuildings[city] = []; cityBuildings[city].push({...b}); }); saveData(); closeModal('distributeModal'); showToast(`🏗️ 分配完成`); }
+        function confirmDistribution() { 
+            if(selectedDistCities.length === 0) return; 
+            const b = masterBuildings[distTargetIdx]; 
+            selectedDistCities.forEach(city => { if(!cityBuildings[city]) cityBuildings[city] = []; cityBuildings[city].push({...b}); }); 
+            saveData(); 
+            closeModal('distributeModal'); 
+            renderMainContent(); // 分配後刷新 UI 顯示 xN 
+            showToast(`🏗️ 分配完成`); 
+        }
+
         function toggleOvSection(sectionId, headerEl) { const content = document.getElementById(sectionId); const isCollapsed = content.classList.toggle('collapsed'); headerEl.classList.toggle('ov-divider-collapsed', isCollapsed); }
 
         function renderOverview() {
