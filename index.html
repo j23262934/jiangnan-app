@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>江南知府 v17.2</title>
+    <title>江南知府 v17.3</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
         /* --- 1. 核心變數 --- */
@@ -93,13 +93,16 @@
         .stat-high { color: var(--primary); font-weight: 800; }
         .stat-ultra { color: #FF9500; font-weight: 800; }
 
-        /* --- 建築樣式 (兩欄優化) --- */
+        /* --- 建築樣式 --- */
         .building-card { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 12px 10px 10px 16px; position: relative; }
         .b-color-strip { position: absolute; left: 0; top: 0; bottom: 0; width: 5px; }
         .b-info { width: 100%; min-width: 0; }
         .b-name { font-weight: 700; font-size: 0.9rem; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .b-desc { font-size: 0.75rem; color: var(--text-sub); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .btn-distribute { width: 100%; margin-top: 4px; color: #443c3c; background: #F2F2F7; border: none; border-radius: 20px; padding: 5px 0; font-size: 0.75rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 2px; }
+
+        /* 建築合併顯示的數量標籤 */
+        .b-count-tag { position: absolute; top: 6px; right: 8px; background: var(--primary); color: #fff; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,122,255,0.2); }
 
         /* --- 概況專用緊湊樣式 --- */
         .overview-divider { margin: 25px 0 12px 0; font-size: 0.85rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
@@ -172,7 +175,7 @@
     </div>
 
     <header>
-        <div class="app-title">江南知府 v17.2</div>
+        <div class="app-title">江南知府 v17.3</div>
         <nav class="city-scroll" id="cityTabs"></nav>
     </header>
 
@@ -210,7 +213,7 @@
         <div class="nav-item" onclick="switchTab('overview')"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg><div>概況</div></div>
     </nav>
 
-    <!-- Modals -->
+    <!-- Modals (保持不變) -->
     <div class="modal-overlay" id="charModal">
         <div class="modal-box">
             <div class="modal-title" id="charModalTitle">編輯人物</div>
@@ -399,7 +402,7 @@
             "趙孟頫": { rank: "侯", talent: "負責[消耗紙或徽墨]的建造工作時，立即完成[20%]進度；與[管道昇]入住同城市，雙方負責工作時的屬性變為[1.1]倍。", stats: { build: 387, farm: 270, make: 224, money: 563, adv: 64 }, }, 
             "包拯": { rank: "天", talent: "負責[建造]時，花費的所有資源減少[10%]，但建造時間增加[10%]。且所需工人[-1]。", stats: { build: 789, farm: 606, make: 610, money: 436, adv: 420 }, }, 
         };
-
+        
         const cities = ["special_root", "應天", "蘇州", "杭州", "松江", "徽州", "紹興", "揚州", "雞鳴"];
         let characters = [], masterBuildings = [], cityBuildings = {};
         let currentCity = "special_root", currentTab = "people", editingCharId = null;
@@ -480,26 +483,12 @@
 
         function parseTalent(text) { return text ? text.replace(/\[(.*?)\]/g, '<span class="talent-hl">$1</span>') : "目前無特殊能力設定"; }
 
-        // --- 核心修改：增加排序邏輯 ---
         function renderPeople() {
             const search = document.getElementById('searchInput').value.trim();
             const container = document.getElementById('charList'); container.innerHTML = '';
-            
-            let filtered;
-            if (search) {
-                filtered = characters.filter(c => c.name.includes(search));
-            } else {
-                if (currentCity === "special_root") {
-                    filtered = characters.filter(c => c.city === "未分配");
-                } else {
-                    filtered = characters.filter(c => c.city === currentCity);
-                }
-            }
-
-            // 按照 天 > 侯 > 卿 > 士 排序
+            let filtered = search ? characters.filter(c => c.name.includes(search)) : characters.filter(c => (currentCity === "special_root" ? c.city === "未分配" : c.city === currentCity));
             const rankPriority = { "天": 1, "侯": 2, "卿": 3, "士": 4 };
             filtered.sort((a, b) => (rankPriority[a.rank] || 99) - (rankPriority[b.rank] || 99));
-
             filtered.forEach(char => {
                 const card = document.createElement('div'); card.className = 'card-base char-card'; card.onclick = () => openEditCharModal(char.id);
                 const s = char.stats; const isH = (k) => s[k]>=700?'stat-ultra':(s[k]>=600)?'stat-high':'';
@@ -529,30 +518,30 @@
 
         function openAddCharModal() { editingCharId = null; tempDispatchCity = "未分配"; document.getElementById('charModalTitle').textContent = "新增人物"; document.getElementById('in-c-name').value = ''; document.getElementById('in-c-talent').value = ''; ['build','farm','make','money','adv'].forEach(k => document.getElementById(`in-c-${k}`).value = ''); document.getElementById('btn-delete-char').style.display = 'none'; renderModalCities(); document.getElementById('charModal').classList.add('open'); }
         function openEditCharModal(id) { editingCharId = id; const char = characters.find(c => c.id === id); tempDispatchCity = char.city; document.getElementById('charModalTitle').textContent = "編輯人物"; document.getElementById('in-c-name').value = char.name; document.getElementById('in-c-rank').value = char.rank; document.getElementById('in-c-talent').value = char.talent || ""; Object.keys(char.stats).forEach(k => document.getElementById(`in-c-${k}`).value = char.stats[k]); renderModalCities(); document.getElementById('btn-delete-char').style.display = 'block'; document.getElementById('charModal').classList.add('open'); }
-        
-        function saveChar() {
-            const name = document.getElementById('in-c-name').value.trim();
-            if(!name) return showToast("⚠️ 請輸入姓名");
-            const isDuplicate = characters.some(c => c.name === name && c.id !== editingCharId);
-            if (isDuplicate) return showToast(`⚠️ 「${name}」已在名冊中`);
+        function saveChar() { const name = document.getElementById('in-c-name').value.trim(); if(!name) return showToast("⚠️ 請輸入姓名"); const isDuplicate = characters.some(c => c.name === name && c.id !== editingCharId); if (isDuplicate) return showToast(`⚠️ 「${name}」已在名冊中`); const data = { name, rank: document.getElementById('in-c-rank').value, talent: document.getElementById('in-c-talent').value, city: tempDispatchCity, stats: { build: parseInt(document.getElementById('in-c-build').value)||0, farm: parseInt(document.getElementById('in-c-farm').value)||0, make: parseInt(document.getElementById('in-c-make').value)||0, money: parseInt(document.getElementById('in-c-money').value)||0, adv: parseInt(document.getElementById('in-c-adv').value)||0 } }; if(editingCharId) characters[characters.findIndex(c => c.id === editingCharId)] = { id: editingCharId, ...data }; else characters.push({ id: Date.now(), ...data }); saveData(); closeModal('charModal'); renderMainContent(); showToast("✅ 儲存成功"); }
+        function askDeleteChar() { showConfirmCard("刪除人物", "確定要刪除這位角色嗎？", () => { characters = characters.filter(c => c.id !== editingCharId); saveData(); closeModal('charModal'); renderMainContent(); showToast("🗑️ 已刪除"); }); }
+        function renderModalCities() { const container = document.getElementById('modalCityGrid'); container.innerHTML = ''; ["未分配", ...cities.slice(1)].forEach(c => { const btn = document.createElement('button'); btn.className = `dispatch-btn ${c === tempDispatchCity ? 'selected' : ''}`; btn.textContent = c; btn.onclick = () => { tempDispatchCity = c; renderModalCities(); }; container.appendChild(btn); }); }
 
-            const data = {
-                name, rank: document.getElementById('in-c-rank').value, talent: document.getElementById('in-c-talent').value, city: tempDispatchCity,
-                stats: {
-                    build: parseInt(document.getElementById('in-c-build').value)||0, farm: parseInt(document.getElementById('in-c-farm').value)||0,
-                    make: parseInt(document.getElementById('in-c-make').value)||0, money: parseInt(document.getElementById('in-c-money').value)||0, adv: parseInt(document.getElementById('in-c-adv').value)||0
-                }
-            };
-            if(editingCharId) characters[characters.findIndex(c => c.id === editingCharId)] = { id: editingCharId, ...data };
-            else characters.push({ id: Date.now(), ...data });
-            saveData(); closeModal('charModal'); renderMainContent(); showToast("✅ 儲存成功");
+        // --- 核心工具：分組合併建築 ---
+        function getGroupedBuildings(list) {
+            const groups = {};
+            list.forEach(b => {
+                if (!groups[b.name]) groups[b.name] = { ...b, count: 1 };
+                else groups[b.name].count++;
+            });
+            return Object.values(groups);
         }
 
-        function askDeleteChar() { showConfirmCard("刪除人物", "確定要刪除這位角色嗎？", () => { characters = characters.filter(c => c.id !== editingCharId); saveData(); closeModal('charModal'); renderMainContent(); showToast("🗑️ 已刪除"); }); }
-        function renderModalCities() {
-            const container = document.getElementById('modalCityGrid'); container.innerHTML = '';
-            ["未分配", ...cities.slice(1)].forEach(c => {
-                const btn = document.createElement('button'); btn.className = `dispatch-btn ${c === tempDispatchCity ? 'selected' : ''}`; btn.textContent = c; btn.onclick = () => { tempDispatchCity = c; renderModalCities(); }; container.appendChild(btn);
+        // --- 核心邏輯：按名稱拆除其中一座建築 ---
+        function askDeleteCityBuildingByName(city, name) {
+            showConfirmCard("拆除建築", `確定要拆除 ${city} 的其中一座「${name}」嗎？`, () => {
+                const idx = cityBuildings[city].findIndex(b => b.name === name);
+                if (idx > -1) {
+                    cityBuildings[city].splice(idx, 1);
+                    saveData();
+                    renderMainContent();
+                    showToast("🗑️ 已拆除一座");
+                }
             });
         }
 
@@ -561,18 +550,23 @@
             document.getElementById('addBuildBtn').style.display = isWarehouse ? 'block' : 'none';
             document.getElementById('build-subtitle').textContent = isWarehouse ? "建築倉庫" : `${currentCity} 建築清單`;
             const container = document.getElementById('buildingList'); container.innerHTML = '';
-            let list = isWarehouse ? masterBuildings : (cityBuildings[currentCity] || []);
-            list.forEach((b, idx) => {
-                const card = document.createElement('div'); card.className = `card-base building-card`;
-                card.onclick = isWarehouse ? () => openEditBuildingModal(idx) : () => askDeleteCityBuilding(currentCity, idx);
-                card.innerHTML = `<div class="b-color-strip" style="background:${b.color||'#ddd'}"></div><div class="b-info"><span class="b-name">${b.name}</span><span class="b-desc">${b.desc}</span></div>${isWarehouse?`<button class="btn-distribute" onclick="event.stopPropagation(); openDistributeModal(${idx})"><span class="material-symbols-outlined">add_location_alt</span>分配</button>`:''}`;
-                container.appendChild(card);
-            });
-        }
-
-        function askDeleteCityBuilding(city, idx) {
-            const b = cityBuildings[city][idx];
-            showConfirmCard("拆除建築", `確定要拆除 ${city} 的 ${b.name} 嗎？`, () => { cityBuildings[city].splice(idx, 1); saveData(); renderOverview(); renderCityInfo(); showToast("🗑️ 建築已拆除"); });
+            
+            if (isWarehouse) {
+                masterBuildings.forEach((b, idx) => {
+                    const card = document.createElement('div'); card.className = `card-base building-card`;
+                    card.onclick = () => openEditBuildingModal(idx);
+                    card.innerHTML = `<div class="b-color-strip" style="background:${b.color||'#ddd'}"></div><div class="b-info"><span class="b-name">${b.name}</span><span class="b-desc">${b.desc}</span></div><button class="btn-distribute" onclick="event.stopPropagation(); openDistributeModal(${idx})"><span class="material-symbols-outlined">add_location_alt</span>分配</button>`;
+                    container.appendChild(card);
+                });
+            } else {
+                const grouped = getGroupedBuildings(cityBuildings[currentCity] || []);
+                grouped.forEach(b => {
+                    const card = document.createElement('div'); card.className = `card-base building-card`;
+                    card.onclick = () => askDeleteCityBuildingByName(currentCity, b.name);
+                    card.innerHTML = `<div class="b-color-strip" style="background:${b.color||'#ddd'}"></div><div class="b-info"><span class="b-name">${b.name}</span><span class="b-desc">${b.desc}</span></div>${b.count > 1 ? `<div class="b-count-tag">x${b.count}</div>` : ''}`;
+                    container.appendChild(card);
+                });
+            }
         }
 
         function openAddBuildingModal() { editingBuildIdx = null; document.getElementById('in-b-name').value = ""; document.getElementById('in-b-desc').value = ""; document.getElementById('in-b-color').value = "#5dabff"; document.getElementById('color-circle').style.background = "#5dabff"; document.getElementById('btn-delete-build').style.display = 'none'; document.getElementById('buildingModal').classList.add('open'); }
@@ -583,19 +577,12 @@
         function openDistributeModal(idx) { distTargetIdx = idx; selectedDistCities = []; const container = document.getElementById('distCityGrid'); container.innerHTML = ''; cities.slice(1).forEach(city => { const btn = document.createElement('button'); btn.className = 'dispatch-btn'; btn.textContent = city; btn.onclick = () => { if(selectedDistCities.includes(city)) selectedDistCities = selectedDistCities.filter(c => c !== city); else selectedDistCities.push(city); btn.classList.toggle('selected'); }; container.appendChild(btn); }); document.getElementById('distributeModal').classList.add('open'); }
         function confirmDistribution() { if(selectedDistCities.length === 0) return; const b = masterBuildings[distTargetIdx]; selectedDistCities.forEach(city => { if(!cityBuildings[city]) cityBuildings[city] = []; cityBuildings[city].push({...b}); }); saveData(); closeModal('distributeModal'); showToast(`🏗️ 分配完成`); }
 
-        function toggleOvSection(sectionId, headerEl) {
-            const content = document.getElementById(sectionId);
-            const isCollapsed = content.classList.toggle('collapsed');
-            headerEl.classList.toggle('ov-divider-collapsed', isCollapsed);
-        }
+        function toggleOvSection(sectionId, headerEl) { const content = document.getElementById(sectionId); const isCollapsed = content.classList.toggle('collapsed'); headerEl.classList.toggle('ov-divider-collapsed', isCollapsed); }
 
         function renderOverview() {
             const container = document.getElementById('overview-content');
             const isUnassigned = (currentCity === "special_root");
-            const pList = isUnassigned ? characters.filter(c => c.city === "未分配") : characters.filter(c => c.city === currentCity);
-            const bList = cityBuildings[currentCity] || [];
-
-            // 按照 天 > 侯 > 卿 > 士 排序
+            const pList = characters.filter(c => (isUnassigned ? c.city === "未分配" : c.city === currentCity));
             const rankPriority = { "天": 1, "侯": 2, "卿": 3, "士": 4 };
             pList.sort((a, b) => (rankPriority[a.rank] || 99) - (rankPriority[b.rank] || 99));
 
@@ -604,8 +591,9 @@
                 <div class="ov-collapsible-content" id="ov-p-content"><div class="ov-char-grid" id="ov-p"></div></div>
             `;
             if (!isUnassigned) {
+                const grouped = getGroupedBuildings(cityBuildings[currentCity] || []);
                 html += `
-                    <div class="overview-divider" onclick="toggleOvSection('ov-b-content', this)">城內建築 <span class="ov-count-tag">${bList.length} 座</span><span class="material-symbols-outlined ov-toggle-icon">expand_more</span></div>
+                    <div class="overview-divider" onclick="toggleOvSection('ov-b-content', this)">城內建築 <span class="ov-count-tag">${grouped.length} 種</span><span class="material-symbols-outlined ov-toggle-icon">expand_more</span></div>
                     <div class="ov-collapsible-content" id="ov-b-content"><div class="ov-build-grid" id="ov-b"></div></div>
                 `;
             }
@@ -617,9 +605,11 @@
                 document.getElementById('ov-p').appendChild(card);
             });
             if (!isUnassigned) {
-                bList.forEach((b, idx) => {
-                    const card = document.createElement('div'); card.className = 'card-base building-card ov-build-card'; card.onclick = () => askDeleteCityBuilding(currentCity, idx);
-                    card.innerHTML = `<div class="b-color-strip" style="background:${b.color||'#ddd'}"></div><div class="b-info"><span class="b-name">${b.name}</span></div>`;
+                const grouped = getGroupedBuildings(cityBuildings[currentCity] || []);
+                grouped.forEach(b => {
+                    const card = document.createElement('div'); card.className = 'card-base building-card ov-build-card';
+                    card.onclick = () => askDeleteCityBuildingByName(currentCity, b.name);
+                    card.innerHTML = `<div class="b-color-strip" style="background:${b.color||'#ddd'}"></div><div class="b-info"><span class="b-name">${b.name}</span></div>${b.count > 1 ? `<div class="b-count-tag">x${b.count}</div>` : ''}`;
                     document.getElementById('ov-b').appendChild(card);
                 });
             }
