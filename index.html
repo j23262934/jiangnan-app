@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>江南知府 v17.8</title>
+    <title>江南知府 v17.7</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
         /* --- 1. 核心變數 --- */
@@ -136,7 +136,7 @@
         .color-row { display: flex; align-items: center; gap: 8px; }
         .circular-color-picker { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: relative; cursor: pointer; flex-shrink: 0; }
         .circular-color-picker input[type="color"] { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; cursor: pointer; opacity: 0; }
-        .color-hex-input { font-family: monospace; text-transform: uppercase; text-align: center; padding: 12px 8px !important; font-size: 0.9rem !important; flex: 1; }
+        .color-hex-input { font-family: monospace; text-transform: uppercase; text-align: center; padding: 12px 8px !important; font-size: 0.9rem !important; }
 
         .suggestion-container { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 1001; display: none; max-height: 200px; overflow-y: auto; border: 1px solid #eee; }
         .suggestion-item { padding: 14px 16px; border-bottom: 1px solid #f2f2f7; cursor: pointer; display: flex; justify-content: space-between; }
@@ -156,11 +156,12 @@
     </div>
 
     <header>
-        <div class="app-title">江南知府 v17.8</div>
+        <div class="app-title">江南知府 v17.7</div>
         <nav class="city-scroll" id="cityTabs"></nav>
     </header>
 
     <main>
+        <!-- View 1: 人物 -->
         <div id="view-people" class="view-section active">
             <div class="section-header">
                 <div class="subtitle">人員</div>
@@ -173,6 +174,7 @@
             <div id="charList" class="char-grid"></div>
         </div>
 
+        <!-- View 2: 建築 -->
         <div id="view-city" class="view-section">
             <div class="section-header">
                 <div class="subtitle" id="build-subtitle">建築倉庫</div>
@@ -185,6 +187,7 @@
             <div id="buildingList" class="building-list"></div>
         </div>
 
+        <!-- View 3: 概況 -->
         <div id="view-overview" class="view-section">
             <div class="section-header"><div class="subtitle">州府總覽</div></div>
             <div id="overview-content"></div>
@@ -244,13 +247,14 @@
     <div class="modal-overlay" id="buildingModal">
         <div class="modal-box">
             <div class="modal-title" id="buildModalTitle">原型設定</div>
+            <!-- 修改點：名稱與顏色在同一行 -->
             <div style="display:flex; gap:12px; margin-bottom:15px; align-items:flex-end;">
                 <div class="edit-group" style="flex:1;">
                     <label class="edit-label">名稱</label>
                     <input type="text" id="in-b-name" class="text-input">
                 </div>
-                <div class="edit-group" style="flex:0 0 145px;">
-                    <label class="edit-label">顏色與色碼</label>
+                <div class="edit-group" style="flex:0 0 140px;">
+                    <label class="edit-label">顏色</label>
                     <div class="color-row">
                         <div class="circular-color-picker" id="color-circle">
                             <input type="color" id="in-b-color" oninput="syncColorInput(this.value)">
@@ -477,32 +481,13 @@
             }
         }
 
-        // --- 核心更新：顏色與色碼雙向同步 ---
         function syncColorInput(val) {
             const circle = document.getElementById('color-circle');
             const picker = document.getElementById('in-b-color');
             const hexInput = document.getElementById('in-b-hex');
-            
-            let finalVal = val;
-            // 如果輸入不含 #，且長度正確，自動補上
-            if (!val.startsWith('#') && (val.length === 6 || val.length === 3)) {
-                finalVal = '#' + val;
-            }
-
-            // 更新圓圈視覺與 picker
-            if (/^#[0-9A-F]{6}$/i.test(finalVal) || /^#[0-9A-F]{3}$/i.test(finalVal)) {
-                circle.style.background = finalVal;
-                picker.value = (finalVal.length === 4) ? expandHex(finalVal) : finalVal; 
-                hexInput.value = finalVal.toUpperCase();
-            } else {
-                // 如果是 picker 直接傳入的完整色碼
-                circle.style.background = val;
-                hexInput.value = val.toUpperCase();
-            }
-        }
-
-        function expandHex(hex) {
-            return '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
+            if (val.startsWith('#') && (val.length === 7 || val.length === 4)) { circle.style.background = val; picker.value = val; hexInput.value = val.toUpperCase(); } 
+            else if (!val.startsWith('#') && (val.length === 6 || val.length === 3)) { const hexVal = '#' + val; circle.style.background = hexVal; picker.value = hexVal; hexInput.value = hexVal.toUpperCase(); } 
+            else { circle.style.background = val; hexInput.value = val.toUpperCase(); }
         }
 
         function openAddBuildingModal() { editingBuildIdx = null; document.getElementById('in-b-name').value = ""; document.getElementById('in-b-desc').value = ""; document.getElementById('in-b-color').value = "#5dabff"; syncColorInput("#5dabff"); document.getElementById('btn-delete-build').style.display = 'none'; document.getElementById('buildingModal').classList.add('open'); }
@@ -517,8 +502,8 @@
             if(editingBuildIdx !== null) {
                 const oldName = masterBuildings[editingBuildIdx].name; masterBuildings[editingBuildIdx] = bData;
                 for (let city in cityBuildings) { cityBuildings[city].forEach(cb => { if (cb.name === oldName) { cb.name = bData.name; cb.color = bData.color; cb.desc = bData.desc; } }); }
-                showToast("✅ 已同步全城外觀");
-            } else { masterBuildings.push(bData); showToast("✅ 已新增建築原型"); } 
+                showToast("✅ 已同步全城");
+            } else { masterBuildings.push(bData); showToast("✅ 已新增"); } 
             saveData(); closeModal('buildingModal'); renderMainContent(); 
         }
 
