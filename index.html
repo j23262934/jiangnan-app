@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>江南知府 v17.1</title>
+    <title>江南知府 v17.2</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
         /* --- 1. 核心變數 --- */
@@ -74,7 +74,6 @@
         /* --- 卡片樣式 (兩欄優化) --- */
         .card-base { background: var(--bg-card); border-radius: var(--radius-l); padding: 12px; box-shadow: var(--shadow); margin-bottom: 10px; transition: 0.2s; position: relative; overflow: hidden; cursor: pointer; }
         
-        /* 人物與建築列表改為兩欄 */
         .char-grid, .building-list { 
             display: grid; 
             grid-template-columns: repeat(2, 1fr); 
@@ -121,7 +120,7 @@
         .ov-build-card .b-desc { display: none; } 
         .ov-build-card .b-name { font-size: 0.85rem; }
 
-        /* 底部選單 */
+        /* 底部導航 */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--bottom-nav-height); background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); border-top: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-around; align-items: center; z-index: 50; padding-bottom: 15px; }
         .nav-item { flex: 1; text-align: center; color: #C7C7CC; font-size: 0.75rem; cursor: pointer; }
         .nav-item.active { color: var(--text-main); }
@@ -173,12 +172,11 @@
     </div>
 
     <header>
-        <div class="app-title">江南知府 v17.1</div>
+        <div class="app-title">江南知府 v17.2</div>
         <nav class="city-scroll" id="cityTabs"></nav>
     </header>
 
     <main>
-        <!-- View 1: 人物 -->
         <div id="view-people" class="view-section active">
             <div class="section-header">
                 <div class="subtitle">人員</div>
@@ -191,7 +189,6 @@
             <div id="charList" class="char-grid"></div>
         </div>
 
-        <!-- View 2: 建築 -->
         <div id="view-city" class="view-section">
             <div class="section-header">
                 <div class="subtitle" id="build-subtitle">建築倉庫</div>
@@ -200,7 +197,6 @@
             <div id="buildingList" class="building-list"></div>
         </div>
 
-        <!-- View 3: 概況 -->
         <div id="view-overview" class="view-section">
             <div class="section-header"><div class="subtitle">州府總覽</div></div>
             <div id="overview-content"></div>
@@ -262,7 +258,6 @@
     <div class="modal-overlay" id="dataModal"><div class="modal-box"><div class="modal-title">數據操作</div><textarea id="data-area" class="text-input" style="height:200px; font-size:0.8rem; font-family:monospace;"></textarea><div class="action-btns"><button class="btn btn-cancel" onclick="copyData()">複製</button><button class="btn btn-save-full" onclick="importData()">導入</button></div></div></div>
 
     <script>
-        // --- 核心資料庫 (數據保持不變) ---
         const charDB = {
             "沈周": { rank: "天", talent: "在[商業建築]工作時，立即完成[20%]進度，且[無需]工人。", stats: { build: 241, farm: 433, make: 608, money: 778, adv: 612 }, }, 
             "馮嫽": { rank: "侯", talent: "外出[探險]時，採集植物體力消耗[-12%]，且體力恢復速度加快[12%]。" }, 
@@ -319,26 +314,8 @@
             "狄青": { rank: "侯", talent: "在[晚上]工作時，農牧屬性變為[1.2倍]。", stats: { build: 218, farm: 218, make: 133, money: 382, adv: 248 }, }, 
             "蘭陵笑笑生": { rank: "侯", talent: "在[書局]工作時，不需花費銅錢，反而獲得[150%]銅錢收入。", stats: { build: 51, farm: 257, make: 161, money: 356, adv: 51 }, }, 
             "秦良玉": { rank: "侯", talent: "在[黏土礦]工作時，額外獲得[20份]黏土。", stats: { build: 65, farm: 429, make: 602, money: 607, adv: 435 }, }, 
-            "袁可立": { rank: "侯", talent: "在[魚塘、蟹塘]工作時，立即完成[6%]進度。", stats: { build: 255, farm: 608, make: 430, money: 418, adv: 605 }, }, 
             "趙明誠": { rank: "侯", talent: "負責[建造新建築]時，減少銅錢花費[10%]。", stats: { build: 340, farm: 238, make: 143, money: 59, adv: 167 }, }, 
             "林奴兒": { rank: "侯", talent: "在[漁具店]工作時，銅錢收入提升[50%]。", stats: { build: 148, farm: 148, make: 248, money: 549, adv: 60 }, }, 
-            "王如一": { rank: "侯", talent: "負責[滅火]工作時，立即完成[5%]進度。", stats: { build: 271, farm: 65, make: 301, money: 420, adv: 388 }, },
-            "魏徵": { rank: "侯", talent: "外出[探險]時，採集礦物體力消耗[-10]。驅逐鬼怪時，立即完成[5%]進度。", stats: { build: 269, farm: 403, make: 183, money: 183, adv: 418 }, },
-            "榮嘉": { rank: "侯", talent: "在[商業建築]中負責2小時以上工作，額外獲得[1顆]名貴珍珠。", stats: { build: 224, farm: 404, make: 160, money: 387, adv: 54 }, },
-            "利瑪竇": { rank: "侯", talent: "在[書局]工作時，立即完成[5%]進度。", stats: { build: 73, farm: 181, make: 267, money: 416, adv: 267 }, },
-            "劉玉瑾": { rank: "侯", talent: "在[玉器工坊]工作時，所需玉石減少[10%]，並立即完成[5%]進度。", stats: { build: 65, farm: 245, make: 607, money: 239, adv: 417 }, },
-            "陸深": { rank: "侯", talent: "在[改良農田]工作時，產量提升[20%]。", stats: { build: 245, farm: 602, make: 604, money: 429, adv: 239 }, },
-            "杜言遊": { rank: "侯", talent: "[探索新區域]時，立即完成[10%]進度，且所需工人[-1]。", stats: { build: 64, farm: 416, make: 86, money: 238, adv: 606 }, },
-            "東方祚": { rank: "天", talent: "外出[探險]時，採集礦石體力消耗[-50%]，並額外獲得1個隨機礦物。", stats: { build: 247, farm: 256, make: 608, money: 88, adv: 791 }, },
-            "郭天問": { rank: "侯", talent: "負責[星宿關卡任意工作]時，立即完成[8%]進度。", stats: { build: 454, farm: 425, make: 69, money: 56, adv: 174 }, },
-            "金聖嘆": { rank: "侯", talent: "在[晚上]工作時，建造屬性變為[1.2倍]。", stats: { build: 575, farm: 337, make: 57, money: 57, adv: 204 }, },
-            "花宜芳": { rank: "侯", talent: "在裁縫鋪、子衿衣閣工作時，額外獲得[5%]資源或產品，且所需工人[-1]。", stats: { build: 238, farm: 428, make: 603, money: 416, adv: 86 }, },
-            "燕阿紫": { rank: "侯", talent: "入住城鎮後，會在[空閒]且[投食槽]半滿時主動清理，且該城市小動物出走概率減少[30%]。", stats: { build: 75, farm: 492, make: 416, money: 58, adv: 416 }, },
-            "宋沉吟": { rank: "侯", talent: "在[商業建築]負責2小時以上理財工作時，額外獲得[8份]酒曲。", stats: { build: 235, farm: 364, make: 342, money: 492, adv: 82 }, },
-            "穆桂英": { rank: "侯", talent: "負責[製作]工作時，所需菜餚減少[10%]。", stats: { build: 364, farm: 235, make: 660, money: 219, adv: 342 }, },
-            "小蠻": { rank: "卿", talent: "在[竹林]工作時，產量提升[30%]。", stats: { build: 445, farm: 621, make: 261, money: 98, adv: 91 }, },
-            "文漢儒": { rank: "卿", talent: "在[商業建築]工作時，立即完成[10%]進度。", stats: { build: 242, farm: 63, make: 212, money: 431, adv: 63 }, },
-            "徐妙雲": { rank: "天", talent: "負責[任意工作]時，立即完成[5%]進度，且與朱棣入住同城市時，雙方負責工作時的屬性變為[1.1倍]。", stats: { build: 607, farm: 777, make: 432, money: 611, adv: 255 }, },
             "戚繼光": { rank: "天", talent: "負責[倉城佈防]任意工作時，立即完成[10%]進度，且[無需]額外工人。", stats: { build: 614, farm: 610, make: 424, money: 435, adv: 780 }, },
             "李商隱": { rank: "天", talent: "負責2小時以上[理財]工作時，立即完成[20%]進度，並隨機獲得[30份]資源。", stats: { build: 88, farm: 612, make: 438, money: 778, adv: 422 }, },
             "百里安": { rank: "天", talent: "在[商業建築]中負責2小時以上工作時，額外獲得[20份]瓷器、玉器或越瓷。", stats: { build: 246, farm: 437, make: 777, money: 790, adv: 240 }, },
@@ -346,61 +323,18 @@
             "馬蓬瀛": { rank: "天", talent: "負責[農牧]工作時，立即完成[20%]進度，且所需工人[-1]。", stats: { build: 433, farm: 794, make: 241, money: 247, adv: 95 }, },
             "柳永": { rank: "天", talent: "[建造娛樂建築]時，所需資源消耗減少[10%]，且所需工人[-1]。", stats: { build: 794, farm: 88, make: 438, money: 247, adv: 608 }, },
             "馬遠道": { rank: "天", talent: "在[碼頭]負責船運時，立即完成[15%]進度，且運輸建築所需菜餚減少[30%]。", stats: { build: 422, farm: 612, make: 247, money: 608, adv: 794 }, },
-            "杜秋娘": { rank: "卿", talent: "負責1小時以上[製作]工作時，額外獲得[30份]菜餚。", stats: { build: 231, farm: 231, make: 431, money: 63, adv: 63 }, },
-            "劉淑貞": { rank: "侯", talent: "在[茶園]工作時，額外獲得[20%]資源。", stats: { build: 358, farm: 515, make: 227, money: 532, adv: 227 }, },
-            "柳春鶯": { rank: "侯", talent: "外出[探險]時，採集[植物]體力消耗減少[20%]。", stats: { build: 83, farm: 226, make: 377, money: 423, adv: 514 }, },
-            "顧半城": { rank: "侯", talent: "在[商行]負責[補貨]工作時，消耗貨物減少[6]，並立即完成[10%]進度。", stats: { build: 421, farm: 87, make: 432, money: 607, adv: 240 }, },
-            "曹亦": { rank: "侯", talent: "在揚州漕運負責[轉運]工作時，銅錢收入增加[10%]，並額外獲得[1]張連票。", stats: { build: 254, farm: 87, make: 65, money: 429, adv: 604 }, },
-            "元採藍": { rank: "侯", talent: "負責2小時以上[製作]工作時，額外獲得[2份]染料，且所需工人[-1]。", stats: { build: 425, farm: 84, make: 535, money: 214, adv: 83 }, },
-            "竇有禪": { rank: "侯", talent: "在[黏土礦、草藥田、茶園]工作時，額外獲得[10份]蔬菜，且所需工人[-1]。", stats: { build: 65, farm: 602, make: 435, money: 239, adv: 417 }, },
+            "徐妙雲": { rank: "天", talent: "負責[任意工作]時，立即完成[5%]進度，且與朱棣入住同城市時，雙方負責工作時的屬性變為[1.1倍]。", stats: { build: 607, farm: 777, make: 432, money: 611, adv: 255 }, },
+            "東方祚": { rank: "天", talent: "外出[探險]時，採集礦石體力消耗[-50%]，並額外獲得1個隨機礦物。", stats: { build: 247, farm: 256, make: 608, money: 88, adv: 791 }, },
             "顧小九": { rank: "天", talent: "負責2小時以上[製作]工作時，額外獲得[2個]宅邸傢俱材料，且所需工人[-2]。", stats: { build: 608, farm: 256, make: 794, money: 438, adv: 612 }, },
-            "鍾馗": { rank: "侯", talent: "[晚上]工作時，[製作屬性]變為[1.2倍]。驅逐鬼怪時，立即完成[5%]進度。", stats: { build: 431, farm: 604, make: 606, money: 241, adv: 419 }, },
-            "小青": { rank: "侯", talent: "在[商業建築]工作時，所需工人[+1]，但銅錢收入提升[10%]。", stats: { build: 242, farm: 65, make: 431, money: 598, adv: 405 }, },
-            "蘭心嫻": { rank: "侯", talent: "在[琥珀酒坊]工作時，酒類貨物產量增加[40%]，且所需工人[-1]。", stats: { build: 257, farm: 434, make: 795, money: 792, adv: 439 }, },
-            "白玉堂": { rank: "侯", talent: "在[商業建築]負責1小時以上工作時，額外獲得[50份]菜餚。", stats: { build: 415, farm: 243, make: 427, money: 605, adv: 602 }, },
             "盧璀": { rank: "天", talent: "負責1小時以上[農牧]工作時，立即完成[10%]進度，並隨機獲得[20份]資源。", stats: { build: 609, farm: 795, make: 439, money: 257, adv: 242 }, },
-            "湯大年": { rank: "侯", talent: "在[藥鋪]工作時，銅錢收入提升[100%]，且所需工人[-1]。", stats: { build: 94, farm: 435, make: 65, money: 607, adv: 245 }, },
-            "陶姜": { rank: "侯", talent: "在[香粉廠]工作時，額外獲得[10%]資源。", stats: { build: 89, farm: 244, make: 440, money: 259, adv: 7 }, },
-            "秦子棠": { rank: "侯", talent: "在[商業建築]負責1小時以上工作時，需要的本金減少[50%]，且銅錢收入增加[15%]。", stats: { build: 244, farm: 67, make: 89, money: 431, adv: 96 }, },
-            "大和撫子": { rank: "侯", talent: "在[魚塘、蟹塘]工作時，額外獲得[30份]肉類。", stats: { build: 247, farm: 618, make: 93, money: 241, adv: 428 }, },
-            "祝枝山": { rank: "侯", talent: "負責[任意生產工作]時，物品掉落率提升[30%]。", stats: { build: 245, farm: 604, make: 785, money: 254, adv: 417 }, },
-            "滿庭芳": { rank: "侯", talent: "在[商業建築]工作時，銅錢收入提升[40%]，但所需工人[+1]。", stats: { build: 64, farm: 434, make: 238, money: 601, adv: 86 }, },
-            "朱元璋": { rank: "侯", talent: "負責[農牧]工作時，立即完成[5%]進度。", stats: { build: 606, farm: 784, make: 238, money: 93, adv: 244 }, },
-            "周遊越": { rank: "侯", talent: "負責1小時以上[理財]工作時，立即完成[8%]進度，且有[3%]機率額外獲得1個珍貴螃蜞。", stats: { build: 66, farm: 240, make: 436, money: 608, adv: 18 }, },
-            "左思": { rank: "侯", talent: "在[造紙廠]工作時，產量提升[10%]，且所需工人[-1]。", stats: { build: 434, farm: 238, make: 772, money: 244, adv: 244 }, },
-            "鄭和": { rank: "侯", talent: "在碼頭負責船運工作時，立即完成[5%]進度，探險體力恢復速度加快[15%]。", stats: { build: 604, farm: 241, make: 241, money: 247, adv: 604 }, },
-            "樂聞": { rank: "侯", talent: "負責[農牧]工作時，隨機獲得[5份]資源，但所需工人[+1]。", stats: { build: 86, farm: 606, make: 416, money: 64, adv: 253 }, },
-            "姚廣孝": { rank: "侯", talent: "負責2小時以上[製作]工作時，立即完成[10%]進度。", stats: { build: 605, farm: 240, make: 605, money: 418, adv: 95 }, },
-            "徐霞客": { rank: "侯", talent: "[探索新區域時]，立即完成[20%]進度。", stats: { build: 242, farm: 84, make: 604, money: 236, adv: 770 }, },
-            "許宣": { rank: "侯", talent: "在[藥鋪]工作時，額外獲得10份草藥。", stats: { build: 247, farm: 419, make: 609, money: 775, adv: 437 }, },
-            "徐光啟": { rank: "侯", talent: "在[農田、改良農田、油菜花田]工作時，額外獲得[10份]蔬菜。", stats: { build: 239, farm: 604, make: 417, money: 245, adv: 254 }, },
-            "謝道韞": { rank: "侯", talent: "負責1小時以上[製作]工作時，所需資源消耗減少[5%]。", stats: { build: 428, farm: 253, make: 603, money: 64, adv: 244 }, },
-            "文徵明": { rank: "侯", talent: "[建造新建築]時，立即完成[36%]進度。", stats: { build: 796, farm: 244, make: 253, money: 84, adv: 612 }, },
-            "吳黎": { rank: "侯", talent: "[升級建築]時，立即完成[20%]進度。", stats: { build: 601, farm: 253, make: 603, money: 93, adv: 86 }, },
-            "蘇武": { rank: "侯", talent: "負責[農牧]工作時，額外獲得[20份]肉類。", stats: { build: 239, farm: 607, make: 245, money: 94, adv: 607 }, },
-            "佘太君": { rank: "侯", talent: "在[商業建築]工作時，每有一位女性工人，則銅錢收入增加[5%]。", stats: { build: 253, farm: 434, make: 428, money: 603, adv: 64 }, },
-            "阮籍": { rank: "侯", talent: "負責[農牧]工作時，物品掉落率提升[20%]。", stats: { build: 89, farm: 604, make: 437, money: 606, adv: 247 }, },
-            "千暮雪": { rank: "侯", talent: "負責2小時以上[製作]工作時，每有一位女性工人，可額外獲得[1]個兵器。", stats: { build: 64, farm: 253, make: 603, money: 428, adv: 416 }, },
-            "邱仲": { rank: "侯", talent: "負責[建造或升級]建築時，立即完成[20%]進度，但所需菜餚花費增加[5%]。", stats: { build: 604, farm: 239, make: 65, money: 94, adv: 429 }, },
-            "裴聞鏡": { rank: "侯", talent: "負責1小時以上[製作]工作時，立即完成[5%]進度，並額外獲得[20%]資源。", stats: { build: 253, farm: 64, make: 603, money: 416, adv: 428 }, },
-            "潘安": { rank: "侯", talent: "建造[新建築]時，獲得[50份]蔬菜。", stats: { build: 602, farm: 417, make: 239, money: 245, adv: 607 }, },
             "王禎": { rank: "天", talent: "負責[農牧]工作時，每有一個工人，額外獲得10%資源。", stats: { build: 434, farm: 779, make: 609, money: 257, adv: 89 }, }, 
             "吳承恩": { rank: "天", talent: "負責2小時以上[製作]工作時，隨機獲得[50]份資源，且所需工人[-1]。", stats: { build: 65, farm: 437, make: 793, money: 65, adv: 790 }, }, 
             "萬千山": { rank: "天", talent: "負責[建造]工作時，每有一個男性工人，立即完成[2%]進度。", stats: { build: 791, farm: 256, make: 438, money: 256, adv: 608 }, }, 
-            "李青溪": { rank: "侯", talent: "在[竹林]工作時，額外獲得[30%]資源，並立即完成[8%]進度。", stats: { build: 246, farm: 603, make: 88, money: 430, adv: 95 }, }, 
-            "李旋簫": { rank: "侯", talent: "在[商業建築]工作時，立即完成[5%]進度，且所需工人[-1]。", stats: { build: 65, farm: 65, make: 245, money: 604, adv: 435 }, }, 
             "王昭君": { rank: "天", talent: "外出[探險]時，只消耗[0.6份]糧草。", stats: { build: 97, farm: 243, make: 793, money: 243, adv: 793 }, }, 
-            "藍玉": { rank: "侯", talent: "除了驛站探險外，在[晚上]工作時，探險屬性變為[1.2倍]。", stats: { build: 434, farm: 253, make: 64, money: 64, adv: 601 }, }, 
-            "羅一響": { rank: "侯", talent: "在[商業建築]工作時，銅錢收入提升[60%]，且所需工人[-1]。", stats: { build: 435, farm: 65, make: 87, money: 607, adv: 254 }, }, 
-            "姜壽": { rank: "侯", talent: "在[壽材店]工作時，銅錢收入提升[50%]，並隨機獲得[5]份資源。", stats: { build: 434, farm: 93, make: 238, money: 601, adv: 238 }, }, 
-            "金鯉": { rank: "侯", talent: "負責1小時以上的[理財]工作時，銅錢收入提升[30%]，且有[50%]機率額外獲得1個上上籤。", stats: { build: 93, farm: 416, make: 416, money: 601, adv: 86 }, }, 
-            "雲晴雪": { rank: "侯", talent: "[建造或升級]1小時以上建築時，立即完成[8%]進度，且所需工人[-1]。", stats: { build: 602, farm: 254, make: 87, money: 429, adv: 417 }, }, 
-            "杜言行": { rank: "侯", talent: "負責1小時以上[農牧]工作時，立即完成[6%]進度，且物品掉落率提升[30%]。", stats: { build: 65, farm: 602, make: 87, money: 417, adv: 245 }, },  
             "向斜陽": { rank: "天", talent: "負責1小時以上[製作]時，有[8%]機率立即完成，且所需工人[-1]。", stats: { build: 247, farm: 608, make: 778, money: 433, adv: 66 }, }, 
             "玄奘": { rank: "天", talent: "負責[任意工作]時，菜餚需求[-30%]，驅逐鬼怪時，立即完成[15%]進度。", stats: { build: 614, farm: 780, make: 424, money: 243, adv: 796 }, }, 
             "徐禎卿": { rank: "天", talent: "在[商業建築]中負責3小時以上工作時，立即完成[30%]進度，且所需工人[-2]。", stats: { build: 780, farm: 440, make: 243, money: 793, adv: 97 }, }, 
             "楊嫿": { rank: "天", talent: "負責2小時以上[農牧]工作時，立即完成[10%]進度，並額外獲得[100%]資源。", stats: { build: 247, farm: 778, make: 433, money: 612, adv: 608 }, }, 
-            "董其昌": { rank: "侯", talent: "負責[製作]工作時，額外獲得[90%]資源。", stats: { build: 242, farm: 96, make: 792, money: 609, adv: 439 }, }, 
             "張山歸": { rank: "天", talent: "探索[新區域]時，立即完成[15%]進度，且除銅錢外的其他資源及道具消耗減少[10%]。", stats: { build: 434, farm: 613, make: 609, money: 248, adv: 779 }, }, 
             "奢香": { rank: "天", talent: "[建造新商業建築]時，隨機獲得[30]份資源，且所需工人[-1]。", stats: { build: 790, farm: 777, make: 246, money: 94, adv: 607 }, }, 
             "蘇軾": { rank: "天", talent: "負責[製作]工作時，肉類需求[-50%]，且所需工人[-2]。", stats: { build: 249, farm: 67, make: 783, money: 797, adv: 612 }, }, 
@@ -490,7 +424,6 @@
             renderCityTabs(); renderMainContent();
         }
 
-        // --- 優化標籤名稱渲染 ---
         function renderCityTabs() {
             const container = document.getElementById('cityTabs'); container.innerHTML = '';
             const list = (currentTab === 'overview') ? cities.slice(1) : cities;
@@ -513,7 +446,7 @@
 
         function parseTalent(text) { return text ? text.replace(/\[(.*?)\]/g, '<span class="talent-hl">$1</span>') : "目前無特殊能力設定"; }
 
-        // --- 優化人物過濾邏輯：未分類僅顯示未分配的人 ---
+        // --- 核心修改：增加排序邏輯 ---
         function renderPeople() {
             const search = document.getElementById('searchInput').value.trim();
             const container = document.getElementById('charList'); container.innerHTML = '';
@@ -528,6 +461,10 @@
                     filtered = characters.filter(c => c.city === currentCity);
                 }
             }
+
+            // 按照 天 > 侯 > 卿 > 士 排序
+            const rankPriority = { "天": 1, "侯": 2, "卿": 3, "士": 4 };
+            filtered.sort((a, b) => (rankPriority[a.rank] || 99) - (rankPriority[b.rank] || 99));
 
             filtered.forEach(char => {
                 const card = document.createElement('div'); card.className = 'card-base char-card'; card.onclick = () => openEditCharModal(char.id);
@@ -548,7 +485,7 @@
                 item.onclick = () => {
                     const d = charDB[m]; document.getElementById('in-c-name').value = m;
                     document.getElementById('in-c-rank').value = d.rank; document.getElementById('in-c-talent').value = d.talent || "";
-                    Object.keys(d.stats).forEach(k => document.getElementById(`in-c-${k}`).value = d.stats[k]);
+                    if(d.stats) Object.keys(d.stats).forEach(k => document.getElementById(`in-c-${k}`).value = d.stats[k]);
                     box.style.display = 'none';
                 };
                 box.appendChild(item);
@@ -623,6 +560,10 @@
             const isUnassigned = (currentCity === "special_root");
             const pList = isUnassigned ? characters.filter(c => c.city === "未分配") : characters.filter(c => c.city === currentCity);
             const bList = cityBuildings[currentCity] || [];
+
+            // 按照 天 > 侯 > 卿 > 士 排序
+            const rankPriority = { "天": 1, "侯": 2, "卿": 3, "士": 4 };
+            pList.sort((a, b) => (rankPriority[a.rank] || 99) - (rankPriority[b.rank] || 99));
 
             let html = `
                 <div class="overview-divider" onclick="toggleOvSection('ov-p-content', this)">駐紮官員 <span class="ov-count-tag">${pList.length} 人</span><span class="material-symbols-outlined ov-toggle-icon">expand_more</span></div>
