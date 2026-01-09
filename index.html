@@ -84,6 +84,10 @@
         .stat-box { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 25px; }
         .stat-label { font-size: 0.6rem; color: #B0B0B5; }
         .stat-val { font-size: 0.85rem; font-weight: 600; }
+        
+        /* 數值高亮樣式 (新增) */
+        .stat-val.stat-high { color: #5dabff; font-weight: 800; } /* 600+ 橘色 */
+        .stat-val.stat-ultra { color: #FF9500; font-weight: 900; } /* 700+ 紅色 */
 
         /* --- 建築樣式 --- */
         .building-card { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 12px 10px 10px 16px; position: relative; }
@@ -123,8 +127,11 @@
         .edit-group-v { margin-bottom: 20px; }
         .edit-label { font-size: 0.85rem; color: var(--text-sub); font-weight: 600; margin-bottom: 8px; display: block; }
         .text-input, .talent-input, .select-input { width: 100%; padding: 14px; border: none; background: var(--bg-input); border-radius: 12px; font-size: 1rem; color: var(--text-main); }
+        
+        /* 數值輸入框樣式調整 */
         .stat-inputs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-        .stat-input-wrap input { width: 100%; text-align: center; padding: 12px 0; border: none; background: var(--bg-input); border-radius: 12px; font-weight: 700; }
+        .stat-input-wrap input { width: 100%; text-align: center; padding: 12px 0; border: none; background: var(--bg-input); border-radius: 12px; font-weight: 700; transition: color 0.2s; }
+
         .city-dispatch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .dispatch-btn { padding: 12px; border: none; background: var(--bg-input); border-radius: 12px; font-weight: 600; cursor: pointer; border: 2px solid transparent; }
         .dispatch-btn.selected { background: #EAF2FF; color: var(--primary); border-color: var(--primary); }
@@ -226,11 +233,12 @@
             <div class="edit-group-v">
                 <label class="edit-label">五維屬性</label>
                 <div class="stat-inputs">
-                    <div class="stat-input-wrap"><input type="number" id="in-c-build"></div>
-                    <div class="stat-input-wrap"><input type="number" id="in-c-farm"></div>
-                    <div class="stat-input-wrap"><input type="number" id="in-c-make"></div>
-                    <div class="stat-input-wrap"><input type="number" id="in-c-money"></div>
-                    <div class="stat-input-wrap"><input type="number" id="in-c-adv"></div>
+                    <!-- 新增 oninput 事件，即時更新顏色 -->
+                    <div class="stat-input-wrap"><input type="number" id="in-c-build" oninput="updateInputColor(this)"></div>
+                    <div class="stat-input-wrap"><input type="number" id="in-c-farm" oninput="updateInputColor(this)"></div>
+                    <div class="stat-input-wrap"><input type="number" id="in-c-make" oninput="updateInputColor(this)"></div>
+                    <div class="stat-input-wrap"><input type="number" id="in-c-money" oninput="updateInputColor(this)"></div>
+                    <div class="stat-input-wrap"><input type="number" id="in-c-adv" oninput="updateInputColor(this)"></div>
                 </div>
             </div>
             <div class="edit-group-v">
@@ -495,17 +503,89 @@
             filtered.sort((a, b) => (rankPriority[a.rank] || 99) - (rankPriority[b.rank] || 99));
             filtered.forEach(char => {
                 const card = document.createElement('div'); card.className = 'card-base char-card'; card.onclick = () => openEditCharModal(char.id);
+                // 這裡的邏輯原本已經有了，配合新增的 CSS 即可顯示顏色
                 const s = char.stats; const isH = (k) => s[k]>=700?'stat-ultra':(s[k]>=600)?'stat-high':'';
                 card.innerHTML = `<div class="card-header-row"><span class="char-name">${char.name}</span><span class="rank-tag bg-${char.rank}">${char.rank}</span></div><div class="char-talent">${parseTalent(char.talent)}</div><div class="stats-row"><div class="stat-box"><span class="stat-label">建</span><span class="stat-val ${isH('build')}">${s.build}</span></div><div class="stat-box"><span class="stat-label">農</span><span class="stat-val ${isH('farm')}">${s.farm}</span></div><div class="stat-box"><span class="stat-label">製</span><span class="stat-val ${isH('make')}">${s.make}</span></div><div class="stat-box"><span class="stat-label">理</span><span class="stat-val ${isH('money')}">${s.money}</span></div><div class="stat-box"><span class="stat-label">探</span><span class="stat-val ${isH('adv')}">${s.adv}</span></div></div>`;
                 container.appendChild(card);
             });
         }
 
-        function handleNameInput() { const val = document.getElementById('in-c-name').value.trim(); const box = document.getElementById('suggestionBox'); box.innerHTML = ''; if(!val) { box.style.display = 'none'; return; } const matches = Object.keys(charDB).filter(n => n.includes(val)); matches.forEach(m => { const item = document.createElement('div'); item.className = 'suggestion-item'; item.innerHTML = `<span>${m}</span><span style="font-size:0.75rem; color:#8e8e93;">${charDB[m].rank}</span>`; item.onclick = () => { const d = charDB[m]; document.getElementById('in-c-name').value = m; document.getElementById('in-c-rank').value = d.rank; document.getElementById('in-c-talent').value = d.talent || ""; if(d.stats) Object.keys(d.stats).forEach(k => document.getElementById(`in-c-${k}`).value = d.stats[k]); box.style.display = 'none'; }; box.appendChild(item); }); box.style.display = matches.length > 0 ? 'block' : 'none'; }
+        // --- 新增：數值輸入框自動變色邏輯 ---
+        function updateInputColor(el) {
+            const val = parseInt(el.value) || 0;
+            el.classList.remove('stat-high', 'stat-ultra');
+            if (val >= 700) {
+                el.classList.add('stat-ultra');
+            } else if (val >= 600) {
+                el.classList.add('stat-high');
+            }
+        }
+
+        function handleNameInput() { 
+            const val = document.getElementById('in-c-name').value.trim(); 
+            const box = document.getElementById('suggestionBox'); 
+            box.innerHTML = ''; 
+            if(!val) { box.style.display = 'none'; return; } 
+            const matches = Object.keys(charDB).filter(n => n.includes(val)); 
+            matches.forEach(m => { 
+                const item = document.createElement('div'); 
+                item.className = 'suggestion-item'; 
+                item.innerHTML = `<span>${m}</span><span style="font-size:0.75rem; color:#8e8e93;">${charDB[m].rank}</span>`; 
+                item.onclick = () => { 
+                    const d = charDB[m]; 
+                    document.getElementById('in-c-name').value = m; 
+                    document.getElementById('in-c-rank').value = d.rank; 
+                    document.getElementById('in-c-talent').value = d.talent || ""; 
+                    if(d.stats) {
+                        ['build','farm','make','money','adv'].forEach(k => {
+                            const input = document.getElementById(`in-c-${k}`);
+                            input.value = d.stats[k];
+                            // 自動填入時也要更新顏色
+                            updateInputColor(input);
+                        });
+                    }
+                    box.style.display = 'none'; 
+                }; 
+                box.appendChild(item); 
+            }); 
+            box.style.display = matches.length > 0 ? 'block' : 'none'; 
+        }
         
         // --- 角色彈窗與儲存 ---
-        function openAddCharModal() { editingCharId = null; tempDispatchCity = "未分配"; document.getElementById('charModalTitle').textContent = "新增人物"; document.getElementById('in-c-name').value = ''; document.getElementById('in-c-talent').value = ''; ['build','farm','make','money','adv'].forEach(k => document.getElementById(`in-c-${k}`).value = ''); document.getElementById('btn-delete-char').style.display = 'none'; renderModalCities(); document.getElementById('charModal').classList.add('open'); }
-        function openEditCharModal(id) { editingCharId = id; const char = characters.find(c => c.id === id); tempDispatchCity = char.city; document.getElementById('charModalTitle').textContent = "編輯人物"; document.getElementById('in-c-name').value = char.name; document.getElementById('in-c-rank').value = char.rank; document.getElementById('in-c-talent').value = char.talent || ""; Object.keys(char.stats).forEach(k => document.getElementById(`in-c-${k}`).value = char.stats[k]); renderModalCities(); document.getElementById('btn-delete-char').style.display = 'block'; document.getElementById('charModal').classList.add('open'); }
+        function openAddCharModal() { 
+            editingCharId = null; tempDispatchCity = "未分配"; 
+            document.getElementById('charModalTitle').textContent = "新增人物"; 
+            document.getElementById('in-c-name').value = ''; 
+            document.getElementById('in-c-rank').value = '天';
+            document.getElementById('in-c-talent').value = ''; 
+            ['build','farm','make','money','adv'].forEach(k => {
+                const input = document.getElementById(`in-c-${k}`);
+                input.value = '';
+                updateInputColor(input); // 重置顏色
+            }); 
+            document.getElementById('btn-delete-char').style.display = 'none'; 
+            renderModalCities(); 
+            document.getElementById('charModal').classList.add('open'); 
+        }
+
+        function openEditCharModal(id) { 
+            editingCharId = id; 
+            const char = characters.find(c => c.id === id); 
+            tempDispatchCity = char.city; 
+            document.getElementById('charModalTitle').textContent = "編輯人物"; 
+            document.getElementById('in-c-name').value = char.name; 
+            document.getElementById('in-c-rank').value = char.rank; 
+            document.getElementById('in-c-talent').value = char.talent || ""; 
+            Object.keys(char.stats).forEach(k => {
+                const input = document.getElementById(`in-c-${k}`);
+                input.value = char.stats[k];
+                updateInputColor(input); // 編輯時初始化顏色
+            }); 
+            renderModalCities(); 
+            document.getElementById('btn-delete-char').style.display = 'block'; 
+            document.getElementById('charModal').classList.add('open'); 
+        }
+
         function saveChar() { const name = document.getElementById('in-c-name').value.trim(); if(!name) return showToast("⚠️ 請輸入姓名"); const isDuplicate = characters.some(c => c.name === name && c.id !== editingCharId); if (isDuplicate) return showToast(`⚠️ 「${name}」已在名冊中`); const data = { name, rank: document.getElementById('in-c-rank').value, talent: document.getElementById('in-c-talent').value, city: tempDispatchCity, stats: { build: parseInt(document.getElementById('in-c-build').value)||0, farm: parseInt(document.getElementById('in-c-farm').value)||0, make: parseInt(document.getElementById('in-c-make').value)||0, money: parseInt(document.getElementById('in-c-money').value)||0, adv: parseInt(document.getElementById('in-c-adv').value)||0 } }; if(editingCharId) characters[characters.findIndex(c => c.id === editingCharId)] = { id: editingCharId, ...data }; else characters.push({ id: Date.now(), ...data }); saveData(); closeModal('charModal'); renderMainContent(); showToast("✅ 儲存成功"); }
         function askDeleteChar() { showConfirmCard("刪除人物", "確定要刪除這位角色嗎？", () => { characters = characters.filter(c => c.id !== editingCharId); saveData(); closeModal('charModal'); renderMainContent(); showToast("🗑️ 已刪除"); }); }
         function renderModalCities() { const container = document.getElementById('modalCityGrid'); container.innerHTML = ''; ["未分配", ...cities.slice(1)].forEach(c => { const btn = document.createElement('button'); btn.className = `dispatch-btn ${c === tempDispatchCity ? 'selected' : ''}`; btn.textContent = c; btn.onclick = () => { tempDispatchCity = c; renderModalCities(); }; container.appendChild(btn); }); }
