@@ -1,6 +1,6 @@
 {
-  "name": "飲料紀錄",
-  "short_name": "飲料紀錄",
+  "name": "江南人物分配",
+  "short_name": "江南人物",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#ffffff",
